@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { HomePage } from './pages/HomePage';
 import { MapView } from './components/map/MapView';
 import { ArtCard } from './components/art/ArtCard';
 import { ArtDetails } from './components/art/ArtDetails';
@@ -7,7 +9,26 @@ import { artLocations } from './data/artLocations';
 import { MapIcon } from 'lucide-react';
 
 function App() {
-  const [selectedArt, setSelectedArt] = useState<ArtLocation | null>(null);
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route
+          path="/tour"
+          element={
+            <TourView
+              artLocations={artLocations}
+            />
+          }
+        />
+      </Routes>
+    </Router>
+  );
+}
+
+// Separate the current view into its own component
+function TourView({ artLocations }: { artLocations: ArtLocation[] }) {
+  const [selectedArt, setSelectedArt] = React.useState<ArtLocation | null>(null);
 
   return (
     <div className="h-screen flex flex-col">
