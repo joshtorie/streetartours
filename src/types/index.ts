@@ -10,6 +10,7 @@ export interface City {
   image: string;
   description: string;
   coordinates: [number, number];
+  neighborhoods: Neighborhood[];
 }
 
 export interface Neighborhood {
@@ -19,6 +20,7 @@ export interface Neighborhood {
   description: string;
   image: string;
   coordinates: [number, number];
+  tours: Tour[];
 }
 
 export interface ArtPiece {

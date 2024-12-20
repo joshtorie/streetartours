@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { HomePage } from './pages/HomePage';
+import { CityPage } from './pages/CityPage';
 import { MapView } from './components/map/MapView';
 import { ArtCard } from './components/art/ArtCard';
 import { ArtDetails } from './components/art/ArtDetails';
@@ -13,6 +14,7 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<HomePage />} />
+        <Route path="/cities/:cityId" element={<CityPage />} />
         <Route
           path="/tour"
           element={
