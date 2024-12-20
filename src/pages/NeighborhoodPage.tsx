@@ -68,9 +68,9 @@ export function NeighborhoodPage() {
               className="px-4 py-2 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
             >
               <option value="ALL">All Durations</option>
-              <option value="SHORT">Short (≤ 1 hour)</option>
+              <option value="SHORT">Short (1 hour or less)</option>
               <option value="MEDIUM">Medium (1-2 hours)</option>
-              <option value="LONG">Long (> 2 hours)</option>
+              <option value="LONG">Long (over 2 hours)</option>
             </select>
           </div>
         </div>
