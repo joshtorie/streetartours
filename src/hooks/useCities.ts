@@ -1,29 +1,36 @@
 import { useState, useEffect } from 'react';
+import { supabase } from '../supabaseClient';
 import { City } from '../types';
-import { cities as initialCities } from '../data/cities';
 
 export function useCities() {
-  const [cities, setCities] = useState<City[]>(initialCities);
-  const [loading, setLoading] = useState(false);
+  const [cities, setCities] = useState<City[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const searchCities = (query: string) => {
-    if (!query.trim()) {
-      setCities(initialCities);
-      return;
-    }
+  useEffect(() => {
+    const fetchCities = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('Cities')
+          .select(`
+            id,
+            name,
+            description,
+            image,
+            coordinates
+          `);
 
-    const filtered = initialCities.filter(city =>
-      city.name.toLowerCase().includes(query.toLowerCase()) ||
-      city.description.toLowerCase().includes(query.toLowerCase())
-    );
-    setCities(filtered);
-  };
+        if (error) throw error;
+        setCities(data || []);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  return {
-    cities,
-    loading,
-    error,
-    searchCities,
-  };
+    fetchCities();
+  }, []);
+
+  return { cities, loading, error };
 }

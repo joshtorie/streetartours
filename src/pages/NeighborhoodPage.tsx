@@ -1,17 +1,56 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Header } from '../components/layout/Header';
 import { TourCard } from '../components/tour/TourCard';
-import { cities } from '../data/cities';
-import { Tour, TourType } from '../types';
+import { supabase } from '../supabaseClient';
+import { Tour, TourType, Neighborhood } from '../types';
 
 export function NeighborhoodPage() {
   const { cityId, neighborhoodId } = useParams();
+  const [neighborhood, setNeighborhood] = useState<Neighborhood | null>(null);
+  const [tours, setTours] = useState<Tour[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedFilter, setSelectedFilter] = useState<TourType | 'ALL'>('ALL');
   const [selectedDuration, setSelectedDuration] = useState<string>('ALL');
 
-  const city = cities.find(c => c.id === cityId);
-  const neighborhood = city?.neighborhoods.find(n => n.id === neighborhoodId);
+  useEffect(() => {
+    const fetchNeighborhoodAndTours = async () => {
+      try {
+        // Fetch neighborhood data
+        const { data: neighborhoodData, error: neighborhoodError } = await supabase
+          .from('Neighborhoods')
+          .select('*')
+          .eq('id', neighborhoodId)
+          .eq('city_id', cityId)
+          .single();
+
+        if (neighborhoodError) throw neighborhoodError;
+        setNeighborhood(neighborhoodData);
+
+        // Fetch tours for this neighborhood
+        const { data: tourData, error: tourError } = await supabase
+          .from('Tours')
+          .select(`
+            *,
+            art_pieces:ArtPieces(*)
+          `)
+          .eq('neighborhood_id', neighborhoodId);
+
+        if (tourError) throw tourError;
+        setTours(tourData || []);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchNeighborhoodAndTours();
+  }, [cityId, neighborhoodId]);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   if (!neighborhood) {
     return <div>Neighborhood not found</div>;
@@ -30,11 +69,10 @@ export function NeighborhoodPage() {
   };
 
   const handleTourClick = (tour: Tour) => {
-    // Navigate to tour page
     window.location.href = `/cities/${cityId}/neighborhoods/${neighborhoodId}/tours/${tour.id}`;
   };
 
-  const filteredTours = filterTours(neighborhood.tours);
+  const filteredTours = filterTours(tours);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -85,7 +123,7 @@ export function NeighborhoodPage() {
               <TourCard
                 key={tour.id}
                 tour={tour}
-                onClick={handleTourClick}
+                onClick={() => handleTourClick(tour)}
               />
             ))
           )}

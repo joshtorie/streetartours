@@ -9,61 +9,45 @@ export interface City {
   name: string;
   image: string;
   description: string;
-  coordinates: [number, number];
+  coordinates: any; // Using any for now as it's a PostGIS geometry type
   neighborhoods: Neighborhood[];
 }
 
 export interface Neighborhood {
   id: string;
-  cityId: string;
+  city_id: string; // Changed to match database column name
   name: string;
   description: string;
   image: string;
-  coordinates: [number, number];
+  coordinates: any; // Using any for now as it's a PostGIS geometry type
   tours: Tour[];
+}
+
+export interface Artist {
+  id: string;
+  name: string;
+  instagram: string;
 }
 
 export interface ArtPiece {
   id: string;
-  title: string;
-  artist: string;
+  tour_id: string; // Changed to match database column name
+  artist_id: string; // Changed to match database column name
+  image: string;
+  video: string;
+  audio: string;
   description: string;
-  image: string;
-  coordinates: [number, number];
-  year?: string;
-  type: string[];
-  duration: number; // in minutes
-  audioGuide?: string;
-  modelUrl?: string; // 3D model URL
-  videoUrl?: string;
-  merchandise: Merchandise[];
-  ratings: Rating[];
-}
-
-export interface Merchandise {
-  id: string;
-  name: string;
-  price: number;
-  image: string;
-  url: string;
-}
-
-export interface Rating {
-  userId: string;
-  rating: number;
-  comment?: string;
-  date: string;
 }
 
 export interface Tour {
   id: string;
-  neighborhoodId: string;
+  neighborhood_id: string; // Changed to match database column name
   name: string;
   description: string;
   duration: number;
   distance: number;
-  artPieces: ArtPiece[];
   type: TourType;
+  art_pieces?: ArtPiece[]; // Optional as it might be included in joins
 }
 
 export type TourType = 'ARTIST' | 'STYLE' | 'DURATION';
