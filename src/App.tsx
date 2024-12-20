@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { HomePage } from './pages/HomePage';
 import { CityPage } from './pages/CityPage';
+import { NeighborhoodPage } from './pages/NeighborhoodPage';
 import { MapView } from './components/map/MapView';
 import { ArtCard } from './components/art/ArtCard';
 import { ArtDetails } from './components/art/ArtDetails';
@@ -15,6 +16,7 @@ function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/cities/:cityId" element={<CityPage />} />
+        <Route path="/cities/:cityId/neighborhoods/:neighborhoodId" element={<NeighborhoodPage />} />
         <Route
           path="/tour"
           element={
