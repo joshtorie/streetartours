@@ -506,253 +506,250 @@ export function AdminPage() {
   };
 
   return (
-    <div style={styles.container}>
+    <div style={{
+      padding: '20px',
+      maxWidth: '800px',
+      margin: '0 auto'
+    }}>
       <Header />
       
-      <div style={{ marginBottom: '20px', borderBottom: '1px solid #ccc', display: 'flex', gap: '10px' }}>
-        <button
-          style={{
-            padding: '10px 20px',
-            backgroundColor: activeTab === 'art' ? '#3b82f6' : 'transparent',
-            color: activeTab === 'art' ? 'white' : '#333',
-            border: 'none',
-            cursor: 'pointer'
-          }}
-          onClick={() => setActiveTab('art')}
-        >
-          Add Art
-        </button>
-        <button
-          style={{
-            padding: '10px 20px',
-            backgroundColor: activeTab === 'content' ? '#3b82f6' : 'transparent',
-            color: activeTab === 'content' ? 'white' : '#333',
-            border: 'none',
-            cursor: 'pointer'
-          }}
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '20px',
+        marginTop: '40px'
+      }}>
+        <div 
           onClick={() => setActiveTab('content')}
+          style={{
+            padding: '20px',
+            backgroundColor: '#f3f4f6',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            border: '1px solid #e5e7eb'
+          }}
         >
-          Edit Content
-        </button>
+          <h3 style={{ margin: 0, marginBottom: '8px' }}>Add About Us Content</h3>
+          <p style={{ margin: 0, color: '#6b7280' }}>
+            Edit the content that appears on the About Us page
+          </p>
+        </div>
+
+        <div 
+          onClick={() => setActiveTab('art')}
+          style={{
+            padding: '20px',
+            backgroundColor: '#f3f4f6',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            border: '1px solid #e5e7eb'
+          }}
+        >
+          <h3 style={{ margin: 0, marginBottom: '8px' }}>Add New Art Piece</h3>
+          <p style={{ margin: 0, color: '#6b7280' }}>
+            Add a new street art piece to the map
+          </p>
+        </div>
       </div>
 
-      {message && (
-        <div style={{
-          marginBottom: '20px',
-          padding: '10px',
-          backgroundColor: message.includes('Error') ? '#fee2e2' : '#d1fae5',
-          color: message.includes('Error') ? '#991b1b' : '#065f46',
-          borderRadius: '4px'
-        }}>
-          {message}
-        </div>
-      )}
+      {activeTab && (
+        <div style={{ marginTop: '40px' }}>
+          {activeTab === 'art' ? (
+            <div>
+              <h2 style={{ marginBottom: '20px' }}>Add New Art Piece</h2>
+              <form onSubmit={handleSubmit}>
+                <div style={{ marginBottom: '15px' }}>
+                  <label style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                    Artist Name
+                    <input
+                      type="text"
+                      value={artFormData.artistName}
+                      onChange={(e) => setArtFormData(prev => ({ ...prev, artistName: e.target.value }))}
+                      style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
+                    />
+                  </label>
+                </div>
 
-      {activeTab === 'art' ? (
-        <div>
-          <h2 style={{ fontSize: '24px', marginBottom: '20px' }}>Add New Art Piece</h2>
-          <form onSubmit={handleSubmit}>
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                Artist Name
-                <input
-                  type="text"
-                  value={artFormData.artistName}
-                  onChange={(e) => setArtFormData(prev => ({ ...prev, artistName: e.target.value }))}
-                  style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
-                />
-              </label>
-            </div>
+                <div style={{ marginBottom: '15px' }}>
+                  <label style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                    Art Name
+                    <input
+                      type="text"
+                      value={artFormData.artName}
+                      onChange={(e) => setArtFormData(prev => ({ ...prev, artName: e.target.value }))}
+                      style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
+                    />
+                  </label>
+                </div>
 
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                Art Name
-                <input
-                  type="text"
-                  value={artFormData.artName}
-                  onChange={(e) => setArtFormData(prev => ({ ...prev, artName: e.target.value }))}
-                  style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
-                />
-              </label>
-            </div>
+                <div style={{ marginBottom: '15px' }}>
+                  <label style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                    Description
+                    <textarea
+                      value={artFormData.description}
+                      onChange={(e) => setArtFormData(prev => ({ ...prev, description: e.target.value }))}
+                      style={{ 
+                        padding: '8px', 
+                        border: '1px solid #ccc', 
+                        borderRadius: '4px',
+                        minHeight: '200px',
+                        resize: 'vertical'
+                      }}
+                    />
+                  </label>
+                </div>
 
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                Description
-                <textarea
-                  value={artFormData.description}
-                  onChange={(e) => setArtFormData(prev => ({ ...prev, description: e.target.value }))}
-                  style={{ 
-                    padding: '8px', 
-                    border: '1px solid #ccc', 
+                <div style={{ marginBottom: '15px' }}>
+                  <label style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                    Image
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
+                    />
+                  </label>
+                </div>
+
+                <div style={{ marginBottom: '15px' }}>
+                  <label style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                    City
+                    <select
+                      value={artFormData.cityId}
+                      onChange={(e) => setArtFormData(prev => ({ ...prev, cityId: e.target.value }))}
+                      style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
+                    >
+                      <option value="">Select a city</option>
+                      {cities.map(city => (
+                        <option key={city.id} value={city.id}>{city.name}</option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+
+                <div style={{ marginBottom: '15px' }}>
+                  <label style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                    Neighborhood
+                    <select
+                      value={artFormData.neighborhoodId}
+                      onChange={(e) => setArtFormData(prev => ({ ...prev, neighborhoodId: e.target.value }))}
+                      style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
+                    >
+                      <option value="">Select a neighborhood</option>
+                      {filteredNeighborhoods.map(neighborhood => (
+                        <option key={neighborhood.id} value={neighborhood.id}>{neighborhood.name}</option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                  <div style={{ marginBottom: '15px' }}>
+                    <label style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                      Latitude
+                      <input
+                        type="number"
+                        step="any"
+                        value={artFormData.latitude}
+                        onChange={(e) => handleCoordinatesChange(e, 'latitude')}
+                        style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
+                      />
+                    </label>
+                  </div>
+
+                  <div style={{ marginBottom: '15px' }}>
+                    <label style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                      Longitude
+                      <input
+                        type="number"
+                        step="any"
+                        value={artFormData.longitude}
+                        onChange={(e) => handleCoordinatesChange(e, 'longitude')}
+                        style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
+                      />
+                    </label>
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: '15px' }}>
+                  <label style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                    Splat File
+                    <input
+                      type="file"
+                      accept=".splat"
+                      onChange={handleSplatChange}
+                      style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
+                    />
+                  </label>
+                </div>
+
+                <div style={{ marginBottom: '15px' }}>
+                  <label style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                    Audio File
+                    <input
+                      type="file"
+                      accept="audio/*"
+                      onChange={handleAudioChange}
+                      style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
+                    />
+                  </label>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  style={{
+                    padding: '10px 20px',
+                    backgroundColor: isSubmitting ? '#ccc' : '#3b82f6',
+                    color: 'white',
+                    border: 'none',
                     borderRadius: '4px',
-                    minHeight: '200px',
-                    resize: 'vertical'
+                    cursor: isSubmitting ? 'not-allowed' : 'pointer'
                   }}
-                />
-              </label>
-            </div>
-
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                Image
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
-                />
-              </label>
-            </div>
-
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                City
-                <select
-                  value={artFormData.cityId}
-                  onChange={(e) => setArtFormData(prev => ({ ...prev, cityId: e.target.value }))}
-                  style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
                 >
-                  <option value="">Select a city</option>
-                  {cities.map(city => (
-                    <option key={city.id} value={city.id}>{city.name}</option>
-                  ))}
-                </select>
-              </label>
+                  {isSubmitting ? 'Adding...' : 'Add Art Piece'}
+                </button>
+              </form>
             </div>
+          ) : (
+            <div>
+              <h2 style={{ marginBottom: '20px' }}>Edit About Us Content</h2>
+              <form onSubmit={handleContentSubmit}>
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{ display: 'block', marginBottom: '8px' }}>
+                    Content
+                    <textarea
+                      value={pageContent.content}
+                      onChange={(e) => setPageContent(prev => ({ ...prev, content: e.target.value }))}
+                      style={{ 
+                        width: '100%',
+                        minHeight: '200px',
+                        padding: '12px',
+                        borderRadius: '6px',
+                        border: '1px solid #d1d5db',
+                        marginTop: '8px'
+                      }}
+                    />
+                  </label>
+                </div>
 
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                Neighborhood
-                <select
-                  value={artFormData.neighborhoodId}
-                  onChange={(e) => setArtFormData(prev => ({ ...prev, neighborhoodId: e.target.value }))}
-                  style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
-                >
-                  <option value="">Select a neighborhood</option>
-                  {filteredNeighborhoods.map(neighborhood => (
-                    <option key={neighborhood.id} value={neighborhood.id}>{neighborhood.name}</option>
-                  ))}
-                </select>
-              </label>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                  Latitude
-                  <input
-                    type="number"
-                    step="any"
-                    value={artFormData.latitude}
-                    onChange={(e) => handleCoordinatesChange(e, 'latitude')}
-                    style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
-                  />
-                </label>
-              </div>
-
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                  Longitude
-                  <input
-                    type="number"
-                    step="any"
-                    value={artFormData.longitude}
-                    onChange={(e) => handleCoordinatesChange(e, 'longitude')}
-                    style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
-                  />
-                </label>
-              </div>
-            </div>
-
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                Splat File
-                <input
-                  type="file"
-                  accept=".splat"
-                  onChange={handleSplatChange}
-                  style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
-                />
-              </label>
-            </div>
-
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                Audio File
-                <input
-                  type="file"
-                  accept="audio/*"
-                  onChange={handleAudioChange}
-                  style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
-                />
-              </label>
-            </div>
-
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              style={{
-                padding: '10px 20px',
-                backgroundColor: isSubmitting ? '#ccc' : '#3b82f6',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: isSubmitting ? 'not-allowed' : 'pointer'
-              }}
-            >
-              {isSubmitting ? 'Adding...' : 'Add Art Piece'}
-            </button>
-          </form>
-        </div>
-      ) : (
-        <div>
-          <h2 style={{ fontSize: '24px', marginBottom: '20px' }}>Edit Content</h2>
-          <form onSubmit={handleContentSubmit}>
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                Page Title
-                <input
-                  type="text"
-                  value={pageContent.title}
-                  onChange={(e) => setPageContent(prev => ({ ...prev, title: e.target.value }))}
-                  style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
-                />
-              </label>
-            </div>
-
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                Content
-                <textarea
-                  value={pageContent.content}
-                  onChange={(e) => setPageContent(prev => ({ ...prev, content: e.target.value }))}
-                  style={{ 
-                    padding: '8px', 
-                    border: '1px solid #ccc', 
-                    borderRadius: '4px',
-                    minHeight: '200px',
-                    resize: 'vertical'
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  style={{
+                    backgroundColor: '#3b82f6',
+                    color: 'white',
+                    padding: '10px 20px',
+                    borderRadius: '6px',
+                    border: 'none',
+                    cursor: 'pointer'
                   }}
-                />
-              </label>
+                >
+                  {isSubmitting ? 'Saving...' : 'Save Content'}
+                </button>
+              </form>
             </div>
-
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              style={{
-                padding: '10px 20px',
-                backgroundColor: isSubmitting ? '#ccc' : '#3b82f6',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: isSubmitting ? 'not-allowed' : 'pointer'
-              }}
-            >
-              {isSubmitting ? 'Updating...' : 'Update Content'}
-            </button>
-          </form>
+          )}
         </div>
       )}
     </div>
