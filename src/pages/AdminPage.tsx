@@ -181,6 +181,16 @@ export function AdminPage() {
     setIsSubmitting(true);
     setMessage('');
 
+    // Validate latitude and longitude
+    const lat = parseFloat(artFormData.latitude);
+    const lng = parseFloat(artFormData.longitude);
+
+    if (isNaN(lat) || isNaN(lng)) {
+      setMessage('Please enter valid latitude and longitude values.');
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
       // 1. Upload image to Supabase Storage if provided
       let imageUrl = '';
