@@ -449,22 +449,39 @@ export function AdminPage() {
     }
 
     try {
-      const { data, error } = await supabase.rpc('get_location_info', {
-        lat: artFormData.latitude,
-        lng: artFormData.longitude
+      console.log('Validating coordinates:', {
+        latitude: artFormData.latitude,
+        longitude: artFormData.longitude
       });
+
+      const { data, error } = await supabase
+        .from('Cities')
+        .select(`
+          id,
+          name,
+          Neighborhoods!inner (
+            id,
+            name
+          )
+        `)
+        .filter('st_contains(geometry, st_setsrid(st_point($1, $2), 4326))', {
+          vars: [artFormData.longitude, artFormData.latitude],
+        })
+        .single();
 
       if (error) {
         console.error('Location validation error:', error);
-        throw error;
+        setMessage('Error validating coordinates: ' + error.message);
+        return;
       }
 
-      if (!data || !data.city_id) {
+      if (!data) {
         setMessage('No city found at these coordinates');
         return;
       }
 
-      if (!data.neighborhood_id) {
+      const neighborhood = data.Neighborhoods[0];
+      if (!neighborhood) {
         setMessage('No neighborhood found at these coordinates');
         return;
       }
@@ -472,11 +489,11 @@ export function AdminPage() {
       // Update form data with found city and neighborhood
       setArtFormData(prev => ({
         ...prev,
-        cityId: data.city_id,
-        neighborhoodId: data.neighborhood_id
+        cityId: data.id,
+        neighborhoodId: neighborhood.id
       }));
 
-      setMessage('Location validated successfully!');
+      setMessage(`Location validated successfully! City: ${data.name}, Neighborhood: ${neighborhood.name}`);
     } catch (error) {
       console.error('Error validating coordinates:', error);
       setMessage('Error validating coordinates. Please try again.');
