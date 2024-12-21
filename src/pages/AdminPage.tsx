@@ -135,7 +135,7 @@ const styles = {
 };
 
 export function AdminPage() {
-  const [activeTab, setActiveTab] = useState<'art' | 'content'>('art');
+  const [activeTab, setActiveTab] = useState<'art' | 'content' | null>(null);
   const [cities, setCities] = useState<City[]>([]);
   const [neighborhoods, setNeighborhoods] = useState<Neighborhood[]>([]);
   const [filteredNeighborhoods, setFilteredNeighborhoods] = useState<Neighborhood[]>([]);
@@ -505,6 +505,58 @@ export function AdminPage() {
     }
   };
 
+  const validateCoordinates = async () => {
+    if (!artFormData.latitude || !artFormData.longitude) {
+      setMessage('Please enter both latitude and longitude');
+      return;
+    }
+
+    try {
+      // First, query to find the city that contains these coordinates
+      const { data: cityResults, error: cityError } = await supabase
+        .from('cities')
+        .select('id, name')
+        .filter('geometry', 'st_contains', `POINT(${artFormData.longitude} ${artFormData.latitude})`);
+
+      if (cityError) throw cityError;
+
+      if (!cityResults || cityResults.length === 0) {
+        setMessage('No city found at these coordinates');
+        return;
+      }
+
+      const cityId = cityResults[0].id;
+
+      // Then, query to find the neighborhood that contains these coordinates
+      const { data: neighborhoodResults, error: neighborhoodError } = await supabase
+        .from('neighborhoods')
+        .select('id, name')
+        .filter('geometry', 'st_contains', `POINT(${artFormData.longitude} ${artFormData.latitude})`)
+        .eq('city_id', cityId);
+
+      if (neighborhoodError) throw neighborhoodError;
+
+      if (!neighborhoodResults || neighborhoodResults.length === 0) {
+        setMessage('No neighborhood found at these coordinates');
+        return;
+      }
+
+      const neighborhoodId = neighborhoodResults[0].id;
+
+      // Update form data with found city and neighborhood
+      setArtFormData(prev => ({
+        ...prev,
+        cityId,
+        neighborhoodId
+      }));
+
+      setMessage('Location validated successfully!');
+    } catch (error) {
+      console.error('Error validating coordinates:', error);
+      setMessage('Error validating coordinates. Please try again.');
+    }
+  };
+
   return (
     <div style={{
       padding: '20px',
@@ -513,47 +565,61 @@ export function AdminPage() {
     }}>
       <Header />
       
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '20px',
-        marginTop: '40px'
-      }}>
-        <div 
-          onClick={() => setActiveTab('content')}
-          style={{
-            padding: '20px',
-            backgroundColor: '#f3f4f6',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            border: '1px solid #e5e7eb'
-          }}
-        >
-          <h3 style={{ margin: 0, marginBottom: '8px' }}>Add About Us Content</h3>
-          <p style={{ margin: 0, color: '#6b7280' }}>
-            Edit the content that appears on the About Us page
-          </p>
-        </div>
+      {!activeTab ? (
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '20px',
+          marginTop: '40px'
+        }}>
+          <div 
+            onClick={() => setActiveTab('content')}
+            style={{
+              padding: '20px',
+              backgroundColor: '#f3f4f6',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              border: '1px solid #e5e7eb'
+            }}
+          >
+            <h3 style={{ margin: 0, marginBottom: '8px' }}>Add About Us Content</h3>
+            <p style={{ margin: 0, color: '#6b7280' }}>
+              Edit the content that appears on the About Us page
+            </p>
+          </div>
 
-        <div 
-          onClick={() => setActiveTab('art')}
-          style={{
-            padding: '20px',
-            backgroundColor: '#f3f4f6',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            border: '1px solid #e5e7eb'
-          }}
-        >
-          <h3 style={{ margin: 0, marginBottom: '8px' }}>Add New Art Piece</h3>
-          <p style={{ margin: 0, color: '#6b7280' }}>
-            Add a new street art piece to the map
-          </p>
+          <div 
+            onClick={() => setActiveTab('art')}
+            style={{
+              padding: '20px',
+              backgroundColor: '#f3f4f6',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              border: '1px solid #e5e7eb'
+            }}
+          >
+            <h3 style={{ margin: 0, marginBottom: '8px' }}>Add New Art Piece</h3>
+            <p style={{ margin: 0, color: '#6b7280' }}>
+              Add a new street art piece to the map
+            </p>
+          </div>
         </div>
-      </div>
-
-      {activeTab && (
+      ) : (
         <div style={{ marginTop: '40px' }}>
+          <button
+            onClick={() => setActiveTab(null)}
+            style={{
+              marginBottom: '20px',
+              padding: '8px 16px',
+              backgroundColor: 'transparent',
+              border: '1px solid #d1d5db',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >
+            ← Back to Admin Menu
+          </button>
+
           {activeTab === 'art' ? (
             <div>
               <h2 style={{ marginBottom: '20px' }}>Add New Art Piece</h2>
@@ -611,38 +677,6 @@ export function AdminPage() {
                   </label>
                 </div>
 
-                <div style={{ marginBottom: '15px' }}>
-                  <label style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                    City
-                    <select
-                      value={artFormData.cityId}
-                      onChange={(e) => setArtFormData(prev => ({ ...prev, cityId: e.target.value }))}
-                      style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
-                    >
-                      <option value="">Select a city</option>
-                      {cities.map(city => (
-                        <option key={city.id} value={city.id}>{city.name}</option>
-                      ))}
-                    </select>
-                  </label>
-                </div>
-
-                <div style={{ marginBottom: '15px' }}>
-                  <label style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                    Neighborhood
-                    <select
-                      value={artFormData.neighborhoodId}
-                      onChange={(e) => setArtFormData(prev => ({ ...prev, neighborhoodId: e.target.value }))}
-                      style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
-                    >
-                      <option value="">Select a neighborhood</option>
-                      {filteredNeighborhoods.map(neighborhood => (
-                        <option key={neighborhood.id} value={neighborhood.id}>{neighborhood.name}</option>
-                      ))}
-                    </select>
-                  </label>
-                </div>
-
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
                   <div style={{ marginBottom: '15px' }}>
                     <label style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
@@ -669,6 +703,79 @@ export function AdminPage() {
                       />
                     </label>
                   </div>
+                </div>
+
+                <div style={{ marginBottom: '20px' }}>
+                  <button
+                    type="button"
+                    onClick={validateCoordinates}
+                    style={{
+                      padding: '10px 20px',
+                      backgroundColor: '#3b82f6',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      width: '100%'
+                    }}
+                  >
+                    Validate Location
+                  </button>
+                  {message && (
+                    <div style={{
+                      marginTop: '8px',
+                      padding: '8px',
+                      borderRadius: '4px',
+                      backgroundColor: message.includes('successfully') ? '#d1fae5' : '#fee2e2',
+                      color: message.includes('successfully') ? '#065f46' : '#991b1b'
+                    }}>
+                      {message}
+                    </div>
+                  )}
+                </div>
+
+                <div style={{ marginBottom: '15px' }}>
+                  <label style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                    City
+                    <select
+                      value={artFormData.cityId}
+                      onChange={(e) => setArtFormData(prev => ({ ...prev, cityId: e.target.value }))}
+                      style={{ 
+                        padding: '8px', 
+                        border: '1px solid #ccc', 
+                        borderRadius: '4px',
+                        backgroundColor: artFormData.cityId ? '#f0f9ff' : 'white'
+                      }}
+                      disabled
+                    >
+                      <option value="">Select a city</option>
+                      {cities.map(city => (
+                        <option key={city.id} value={city.id}>{city.name}</option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+
+                <div style={{ marginBottom: '15px' }}>
+                  <label style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                    Neighborhood
+                    <select
+                      value={artFormData.neighborhoodId}
+                      onChange={(e) => setArtFormData(prev => ({ ...prev, neighborhoodId: e.target.value }))}
+                      style={{ 
+                        padding: '8px', 
+                        border: '1px solid #ccc', 
+                        borderRadius: '4px',
+                        backgroundColor: artFormData.neighborhoodId ? '#f0f9ff' : 'white'
+                      }}
+                      disabled
+                    >
+                      <option value="">Select a neighborhood</option>
+                      {filteredNeighborhoods.map(neighborhood => (
+                        <option key={neighborhood.id} value={neighborhood.id}>{neighborhood.name}</option>
+                      ))}
+                    </select>
+                  </label>
                 </div>
 
                 <div style={{ marginBottom: '15px' }}>
