@@ -409,7 +409,7 @@ export function AdminPage() {
 
   // Function to find city and neighborhood based on coordinates
   const findLocationByCoordinates = async (latitude: number, longitude: number) => {
-    if (!latitude || !longitude) return;
+    if (isNaN(latitude) || isNaN(longitude)) return;
 
     try {
       // Find the nearest city within 5km
@@ -425,12 +425,14 @@ export function AdminPage() {
         return;
       }
 
+      console.log('Nearest city:', nearestCity);
+
       if (nearestCity && nearestCity.length > 0) {
         const cityId = nearestCity[0].id;
         setArtFormData(prev => ({ ...prev, cityId }));
 
-        // Find the neighborhood that contains this point
-        const { data: containingNeighborhood, error: neighborhoodError } = await supabase
+        // Find the nearest neighborhood
+        const { data: nearestNeighborhood, error: neighborhoodError } = await supabase
           .rpc('find_containing_neighborhood', {
             lat: latitude,
             lng: longitude
@@ -441,8 +443,10 @@ export function AdminPage() {
           return;
         }
 
-        if (containingNeighborhood && containingNeighborhood.length > 0) {
-          setArtFormData(prev => ({ ...prev, neighborhoodId: containingNeighborhood[0].id }));
+        console.log('Nearest neighborhood:', nearestNeighborhood);
+
+        if (nearestNeighborhood && nearestNeighborhood.length > 0) {
+          setArtFormData(prev => ({ ...prev, neighborhoodId: nearestNeighborhood[0].id }));
         }
       }
     } catch (error) {
@@ -453,13 +457,16 @@ export function AdminPage() {
   // Update coordinates handler to include location finding
   const handleCoordinatesChange = (e: React.ChangeEvent<HTMLInputElement>, field: 'latitude' | 'longitude') => {
     const value = parseFloat(e.target.value);
-    setArtFormData(prev => ({ ...prev, [field]: value }));
+    if (!isNaN(value)) {
+      setArtFormData(prev => ({ ...prev, [field]: value }));
 
-    // If both coordinates are set, try to find the location
-    if (field === 'latitude' && !isNaN(value) && !isNaN(artFormData.longitude)) {
-      findLocationByCoordinates(value, artFormData.longitude);
-    } else if (field === 'longitude' && !isNaN(value) && !isNaN(artFormData.latitude)) {
-      findLocationByCoordinates(artFormData.latitude, value);
+      // If both coordinates are valid numbers, try to find the location
+      const otherValue = field === 'latitude' ? artFormData.longitude : artFormData.latitude;
+      if (!isNaN(otherValue)) {
+        const lat = field === 'latitude' ? value : artFormData.latitude;
+        const lng = field === 'longitude' ? value : artFormData.longitude;
+        findLocationByCoordinates(lat, lng);
+      }
     }
   };
 
