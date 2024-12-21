@@ -156,11 +156,11 @@ const styles = {
   },
 };
 
-export function AdminPage() {
+export default function AdminPage() {
+  const [activeTab, setActiveTab] = useState<'art' | 'content'>('art');
   const [cities, setCities] = useState<City[]>([]);
   const [neighborhoods, setNeighborhoods] = useState<Neighborhood[]>([]);
   const [filteredNeighborhoods, setFilteredNeighborhoods] = useState<Neighborhood[]>([]);
-  const [activeTab, setActiveTab] = useState<'art' | 'content'>('art');
   const [artFormData, setArtFormData] = useState<ArtPieceFormData>({
     artistName: '',
     artName: '',
@@ -560,20 +560,12 @@ export function AdminPage() {
           {message}
         </div>
       )}
-      
-      {contentMessage && (
-        <div style={{
-          ...styles.message,
-          ...(contentMessage.includes('Error') ? styles.error : {}),
-        }}>
-          {contentMessage}
-        </div>
-      )}
 
       {activeTab === 'art' ? (
         <div style={styles.form}>
           <h2 style={styles.heading}>Add New Art Piece</h2>
-          <form style={styles.form} onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit}>
+            {/* Art form fields */}
             <div style={styles.field}>
               <label style={styles.label}>
                 Artist Name
@@ -616,30 +608,6 @@ export function AdminPage() {
                   type="file"
                   accept="image/*"
                   onChange={handleImageChange}
-                  style={styles.input}
-                />
-              </label>
-            </div>
-
-            <div style={styles.field}>
-              <label style={styles.label}>
-                3D Splat
-                <input
-                  type="file"
-                  accept=".glb,.gltf"
-                  onChange={handleSplatChange}
-                  style={styles.input}
-                />
-              </label>
-            </div>
-
-            <div style={styles.field}>
-              <label style={styles.label}>
-                Audio File
-                <input
-                  type="file"
-                  accept="audio/*"
-                  onChange={handleAudioChange}
                   style={styles.input}
                 />
               </label>
@@ -705,6 +673,30 @@ export function AdminPage() {
               </div>
             </div>
 
+            <div style={styles.field}>
+              <label style={styles.label}>
+                Splat File
+                <input
+                  type="file"
+                  accept=".splat"
+                  onChange={handleSplatChange}
+                  style={styles.input}
+                />
+              </label>
+            </div>
+
+            <div style={styles.field}>
+              <label style={styles.label}>
+                Audio File
+                <input
+                  type="file"
+                  accept="audio/*"
+                  onChange={handleAudioChange}
+                  style={styles.input}
+                />
+              </label>
+            </div>
+
             <button
               type="submit"
               disabled={isSubmitting}
@@ -719,8 +711,8 @@ export function AdminPage() {
         </div>
       ) : (
         <div style={styles.form}>
-          <h2 style={styles.heading}>Edit Info Page</h2>
-          <form style={styles.form} onSubmit={handleContentSubmit}>
+          <h2 style={styles.heading}>Edit Content</h2>
+          <form onSubmit={handleContentSubmit}>
             <div style={styles.field}>
               <label style={styles.label}>
                 Page Title
