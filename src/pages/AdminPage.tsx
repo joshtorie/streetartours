@@ -181,16 +181,6 @@ export function AdminPage() {
     setIsSubmitting(true);
     setMessage('');
 
-    // Validate latitude and longitude
-    const lat = parseFloat(artFormData.latitude);
-    const lng = parseFloat(artFormData.longitude);
-
-    if (isNaN(lat) || isNaN(lng)) {
-      setMessage('Please enter valid latitude and longitude values.');
-      setIsSubmitting(false);
-      return;
-    }
-
     try {
       // 1. Upload image to Supabase Storage if provided
       let imageUrl = '';
@@ -199,10 +189,21 @@ export function AdminPage() {
         const fileName = `${Math.random()}.${fileExt}`;
         const { data: imageData, error: imageError } = await supabase.storage
           .from('art-images')
-          .upload(fileName, artFormData.image);
+          .upload(`public/${fileName}`, artFormData.image, {
+            cacheControl: '3600',
+            upsert: false
+          });
 
-        if (imageError) throw imageError;
-        imageUrl = `${supabase.storage.from('art-images').getPublicUrl(fileName).data.publicUrl}`;
+        if (imageError) {
+          console.error('Image upload error:', imageError);
+          throw imageError;
+        }
+        
+        const { data } = supabase.storage
+          .from('art-images')
+          .getPublicUrl(`public/${fileName}`);
+          
+        imageUrl = data.publicUrl;
       }
 
       // 2. Check if artist exists or create new one
@@ -237,9 +238,18 @@ export function AdminPage() {
         const fileName = `${Math.random()}.${fileExt}`;
         const { error: splatError } = await supabase.storage
           .from('art-splat')
-          .upload(fileName, artFormData.splat);
+          .upload(`public/${fileName}`, artFormData.splat, {
+            cacheControl: '3600',
+            upsert: false
+          });
+          
         if (splatError) throw splatError;
-        splatUrl = `${supabase.storage.from('art-splat').getPublicUrl(fileName).data.publicUrl}`;
+        
+        const { data } = supabase.storage
+          .from('art-splat')
+          .getPublicUrl(`public/${fileName}`);
+          
+        splatUrl = data.publicUrl;
       }
 
       // 4. Upload audio file if provided
@@ -249,9 +259,18 @@ export function AdminPage() {
         const fileName = `${Math.random()}.${fileExt}`;
         const { error: audioError } = await supabase.storage
           .from('art-audio')
-          .upload(fileName, artFormData.audio);
+          .upload(`public/${fileName}`, artFormData.audio, {
+            cacheControl: '3600',
+            upsert: false
+          });
+          
         if (audioError) throw audioError;
-        audioUrl = `${supabase.storage.from('art-audio').getPublicUrl(fileName).data.publicUrl}`;
+        
+        const { data } = supabase.storage
+          .from('art-audio')
+          .getPublicUrl(`public/${fileName}`);
+          
+        audioUrl = data.publicUrl;
       }
 
       // 5. Create art piece
