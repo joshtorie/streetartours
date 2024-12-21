@@ -442,7 +442,62 @@ export function AdminPage() {
     }
   };
 
-  // Function to find city and neighborhood based on coordinates
+  const validateCoordinates = async () => {
+    if (!artFormData.latitude || !artFormData.longitude) {
+      setMessage('Please enter both latitude and longitude');
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase.rpc('get_location_info', {
+        lat: artFormData.latitude,
+        lng: artFormData.longitude
+      });
+
+      if (error) {
+        console.error('Location validation error:', error);
+        throw error;
+      }
+
+      if (!data || !data.city_id) {
+        setMessage('No city found at these coordinates');
+        return;
+      }
+
+      if (!data.neighborhood_id) {
+        setMessage('No neighborhood found at these coordinates');
+        return;
+      }
+
+      // Update form data with found city and neighborhood
+      setArtFormData(prev => ({
+        ...prev,
+        cityId: data.city_id,
+        neighborhoodId: data.neighborhood_id
+      }));
+
+      setMessage('Location validated successfully!');
+    } catch (error) {
+      console.error('Error validating coordinates:', error);
+      setMessage('Error validating coordinates. Please try again.');
+    }
+  };
+
+  const handleCoordinatesChange = (e: React.ChangeEvent<HTMLInputElement>, field: 'latitude' | 'longitude') => {
+    const value = parseFloat(e.target.value);
+    if (!isNaN(value)) {
+      setArtFormData(prev => ({ ...prev, [field]: value }));
+
+      // If both coordinates are valid numbers, try to find the location
+      const otherValue = field === 'latitude' ? artFormData.longitude : artFormData.latitude;
+      if (!isNaN(otherValue)) {
+        const lat = field === 'latitude' ? value : artFormData.latitude;
+        const lng = field === 'longitude' ? value : artFormData.longitude;
+        findLocationByCoordinates(lat, lng);
+      }
+    }
+  };
+
   const findLocationByCoordinates = async (latitude: number, longitude: number) => {
     if (isNaN(latitude) || isNaN(longitude)) return;
 
@@ -486,74 +541,6 @@ export function AdminPage() {
       }
     } catch (error) {
       console.error('Error in findLocationByCoordinates:', error);
-    }
-  };
-
-  // Update coordinates handler to include location finding
-  const handleCoordinatesChange = (e: React.ChangeEvent<HTMLInputElement>, field: 'latitude' | 'longitude') => {
-    const value = parseFloat(e.target.value);
-    if (!isNaN(value)) {
-      setArtFormData(prev => ({ ...prev, [field]: value }));
-
-      // If both coordinates are valid numbers, try to find the location
-      const otherValue = field === 'latitude' ? artFormData.longitude : artFormData.latitude;
-      if (!isNaN(otherValue)) {
-        const lat = field === 'latitude' ? value : artFormData.latitude;
-        const lng = field === 'longitude' ? value : artFormData.longitude;
-        findLocationByCoordinates(lat, lng);
-      }
-    }
-  };
-
-  const validateCoordinates = async () => {
-    if (!artFormData.latitude || !artFormData.longitude) {
-      setMessage('Please enter both latitude and longitude');
-      return;
-    }
-
-    try {
-      // First, query to find the city that contains these coordinates
-      const { data: cityResults, error: cityError } = await supabase
-        .from('cities')
-        .select('id, name')
-        .filter('geometry', 'st_contains', `POINT(${artFormData.longitude} ${artFormData.latitude})`);
-
-      if (cityError) throw cityError;
-
-      if (!cityResults || cityResults.length === 0) {
-        setMessage('No city found at these coordinates');
-        return;
-      }
-
-      const cityId = cityResults[0].id;
-
-      // Then, query to find the neighborhood that contains these coordinates
-      const { data: neighborhoodResults, error: neighborhoodError } = await supabase
-        .from('neighborhoods')
-        .select('id, name')
-        .filter('geometry', 'st_contains', `POINT(${artFormData.longitude} ${artFormData.latitude})`)
-        .eq('city_id', cityId);
-
-      if (neighborhoodError) throw neighborhoodError;
-
-      if (!neighborhoodResults || neighborhoodResults.length === 0) {
-        setMessage('No neighborhood found at these coordinates');
-        return;
-      }
-
-      const neighborhoodId = neighborhoodResults[0].id;
-
-      // Update form data with found city and neighborhood
-      setArtFormData(prev => ({
-        ...prev,
-        cityId,
-        neighborhoodId
-      }));
-
-      setMessage('Location validated successfully!');
-    } catch (error) {
-      console.error('Error validating coordinates:', error);
-      setMessage('Error validating coordinates. Please try again.');
     }
   };
 
