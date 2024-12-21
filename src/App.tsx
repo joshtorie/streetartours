@@ -19,6 +19,8 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/cities/:cityId" element={<CityPage />} />
         <Route path="/cities/:cityId/neighborhoods/:neighborhoodId" element={<NeighborhoodPage />} />
+        <Route path="/admin" element={<AdminPage />} />
+        <Route path="/info" element={<InfoPage />} />
         <Route
           path="/tour"
           element={
@@ -27,8 +29,6 @@ function App() {
             />
           }
         />
-        <Route path="/admin" element={<AdminPage />} />
-        <Route path="/info" element={<InfoPage />} />
       </Routes>
     </Router>
   );

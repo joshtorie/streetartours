@@ -43,6 +43,8 @@ const styles = {
     marginBottom: '30px',
     borderBottom: '1px solid #e5e7eb',
     padding: '0 10px',
+    position: 'relative' as const,
+    zIndex: 1,
   },
   tab: {
     padding: '12px 24px',
@@ -55,17 +57,10 @@ const styles = {
     borderBottom: '2px solid transparent',
     marginBottom: '-1px',
     transition: 'all 0.2s ease',
-    ':hover': {
-      color: '#4b5563',
-      borderBottom: '2px solid #e5e7eb',
-    },
   },
   activeTab: {
     color: '#3b82f6',
     borderBottom: '2px solid #3b82f6',
-    ':hover': {
-      borderBottom: '2px solid #3b82f6',
-    },
   },
   heading: {
     fontSize: '24px',
@@ -96,11 +91,6 @@ const styles = {
     fontSize: '14px',
     width: '100%',
     transition: 'border-color 0.2s ease',
-    ':focus': {
-      outline: 'none',
-      borderColor: '#3b82f6',
-      boxShadow: '0 0 0 2px rgba(59, 130, 246, 0.1)',
-    },
   },
   textarea: {
     padding: '8px 12px',
@@ -111,11 +101,6 @@ const styles = {
     minHeight: '200px',
     resize: 'vertical' as const,
     transition: 'border-color 0.2s ease',
-    ':focus': {
-      outline: 'none',
-      borderColor: '#3b82f6',
-      boxShadow: '0 0 0 2px rgba(59, 130, 246, 0.1)',
-    },
   },
   button: {
     padding: '10px 20px',
@@ -127,13 +112,6 @@ const styles = {
     fontSize: '16px',
     fontWeight: '500',
     transition: 'background-color 0.2s ease',
-    ':hover': {
-      backgroundColor: '#2563eb',
-    },
-    ':disabled': {
-      backgroundColor: '#93c5fd',
-      cursor: 'not-allowed',
-    },
   },
   message: {
     marginTop: '10px',
@@ -156,7 +134,7 @@ const styles = {
   },
 };
 
-export default function AdminPage() {
+export function AdminPage() {
   const [activeTab, setActiveTab] = useState<'art' | 'content'>('art');
   const [cities, setCities] = useState<City[]>([]);
   const [neighborhoods, setNeighborhoods] = useState<Neighborhood[]>([]);
