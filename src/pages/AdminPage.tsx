@@ -509,11 +509,14 @@ export function AdminPage() {
     <div style={styles.container}>
       <Header />
       
-      <div style={styles.tabContainer}>
+      <div style={{ marginBottom: '20px', borderBottom: '1px solid #ccc', display: 'flex', gap: '10px' }}>
         <button
           style={{
-            ...styles.tab,
-            ...(activeTab === 'art' ? styles.activeTab : {})
+            padding: '10px 20px',
+            backgroundColor: activeTab === 'art' ? '#3b82f6' : 'transparent',
+            color: activeTab === 'art' ? 'white' : '#333',
+            border: 'none',
+            cursor: 'pointer'
           }}
           onClick={() => setActiveTab('art')}
         >
@@ -521,8 +524,11 @@ export function AdminPage() {
         </button>
         <button
           style={{
-            ...styles.tab,
-            ...(activeTab === 'content' ? styles.activeTab : {})
+            padding: '10px 20px',
+            backgroundColor: activeTab === 'content' ? '#3b82f6' : 'transparent',
+            color: activeTab === 'content' ? 'white' : '#333',
+            border: 'none',
+            cursor: 'pointer'
           }}
           onClick={() => setActiveTab('content')}
         >
@@ -532,72 +538,80 @@ export function AdminPage() {
 
       {message && (
         <div style={{
-          ...styles.message,
-          ...(message.includes('Error') ? styles.error : {}),
+          marginBottom: '20px',
+          padding: '10px',
+          backgroundColor: message.includes('Error') ? '#fee2e2' : '#d1fae5',
+          color: message.includes('Error') ? '#991b1b' : '#065f46',
+          borderRadius: '4px'
         }}>
           {message}
         </div>
       )}
 
       {activeTab === 'art' ? (
-        <div style={styles.form}>
-          <h2 style={styles.heading}>Add New Art Piece</h2>
+        <div>
+          <h2 style={{ fontSize: '24px', marginBottom: '20px' }}>Add New Art Piece</h2>
           <form onSubmit={handleSubmit}>
-            {/* Art form fields */}
-            <div style={styles.field}>
-              <label style={styles.label}>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
                 Artist Name
                 <input
                   type="text"
                   value={artFormData.artistName}
                   onChange={(e) => setArtFormData(prev => ({ ...prev, artistName: e.target.value }))}
-                  style={styles.input}
+                  style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
                 />
               </label>
             </div>
 
-            <div style={styles.field}>
-              <label style={styles.label}>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
                 Art Name
                 <input
                   type="text"
                   value={artFormData.artName}
                   onChange={(e) => setArtFormData(prev => ({ ...prev, artName: e.target.value }))}
-                  style={styles.input}
+                  style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
                 />
               </label>
             </div>
 
-            <div style={styles.field}>
-              <label style={styles.label}>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
                 Description
                 <textarea
                   value={artFormData.description}
                   onChange={(e) => setArtFormData(prev => ({ ...prev, description: e.target.value }))}
-                  style={styles.textarea}
+                  style={{ 
+                    padding: '8px', 
+                    border: '1px solid #ccc', 
+                    borderRadius: '4px',
+                    minHeight: '200px',
+                    resize: 'vertical'
+                  }}
                 />
               </label>
             </div>
 
-            <div style={styles.field}>
-              <label style={styles.label}>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
                 Image
                 <input
                   type="file"
                   accept="image/*"
                   onChange={handleImageChange}
-                  style={styles.input}
+                  style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
                 />
               </label>
             </div>
 
-            <div style={styles.field}>
-              <label style={styles.label}>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
                 City
                 <select
                   value={artFormData.cityId}
                   onChange={(e) => setArtFormData(prev => ({ ...prev, cityId: e.target.value }))}
-                  style={styles.input}
+                  style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
                 >
                   <option value="">Select a city</option>
                   {cities.map(city => (
@@ -607,13 +621,13 @@ export function AdminPage() {
               </label>
             </div>
 
-            <div style={styles.field}>
-              <label style={styles.label}>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
                 Neighborhood
                 <select
                   value={artFormData.neighborhoodId}
                   onChange={(e) => setArtFormData(prev => ({ ...prev, neighborhoodId: e.target.value }))}
-                  style={styles.input}
+                  style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
                 >
                   <option value="">Select a neighborhood</option>
                   {filteredNeighborhoods.map(neighborhood => (
@@ -623,54 +637,54 @@ export function AdminPage() {
               </label>
             </div>
 
-            <div style={styles.coordinatesContainer}>
-              <div style={styles.field}>
-                <label style={styles.label}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+              <div style={{ marginBottom: '15px' }}>
+                <label style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
                   Latitude
                   <input
                     type="number"
                     step="any"
                     value={artFormData.latitude}
                     onChange={(e) => handleCoordinatesChange(e, 'latitude')}
-                    style={styles.input}
+                    style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
                   />
                 </label>
               </div>
 
-              <div style={styles.field}>
-                <label style={styles.label}>
+              <div style={{ marginBottom: '15px' }}>
+                <label style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
                   Longitude
                   <input
                     type="number"
                     step="any"
                     value={artFormData.longitude}
                     onChange={(e) => handleCoordinatesChange(e, 'longitude')}
-                    style={styles.input}
+                    style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
                   />
                 </label>
               </div>
             </div>
 
-            <div style={styles.field}>
-              <label style={styles.label}>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
                 Splat File
                 <input
                   type="file"
                   accept=".splat"
                   onChange={handleSplatChange}
-                  style={styles.input}
+                  style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
                 />
               </label>
             </div>
 
-            <div style={styles.field}>
-              <label style={styles.label}>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
                 Audio File
                 <input
                   type="file"
                   accept="audio/*"
                   onChange={handleAudioChange}
-                  style={styles.input}
+                  style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
                 />
               </label>
             </div>
@@ -679,8 +693,12 @@ export function AdminPage() {
               type="submit"
               disabled={isSubmitting}
               style={{
-                ...styles.button,
-                ...(isSubmitting ? styles.button[':disabled'] : {})
+                padding: '10px 20px',
+                backgroundColor: isSubmitting ? '#ccc' : '#3b82f6',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: isSubmitting ? 'not-allowed' : 'pointer'
               }}
             >
               {isSubmitting ? 'Adding...' : 'Add Art Piece'}
@@ -688,28 +706,34 @@ export function AdminPage() {
           </form>
         </div>
       ) : (
-        <div style={styles.form}>
-          <h2 style={styles.heading}>Edit Content</h2>
+        <div>
+          <h2 style={{ fontSize: '24px', marginBottom: '20px' }}>Edit Content</h2>
           <form onSubmit={handleContentSubmit}>
-            <div style={styles.field}>
-              <label style={styles.label}>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
                 Page Title
                 <input
                   type="text"
                   value={pageContent.title}
                   onChange={(e) => setPageContent(prev => ({ ...prev, title: e.target.value }))}
-                  style={styles.input}
+                  style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
                 />
               </label>
             </div>
 
-            <div style={styles.field}>
-              <label style={styles.label}>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
                 Content
                 <textarea
                   value={pageContent.content}
                   onChange={(e) => setPageContent(prev => ({ ...prev, content: e.target.value }))}
-                  style={styles.textarea}
+                  style={{ 
+                    padding: '8px', 
+                    border: '1px solid #ccc', 
+                    borderRadius: '4px',
+                    minHeight: '200px',
+                    resize: 'vertical'
+                  }}
                 />
               </label>
             </div>
@@ -718,8 +742,12 @@ export function AdminPage() {
               type="submit"
               disabled={isSubmitting}
               style={{
-                ...styles.button,
-                ...(isSubmitting ? styles.button[':disabled'] : {})
+                padding: '10px 20px',
+                backgroundColor: isSubmitting ? '#ccc' : '#3b82f6',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: isSubmitting ? 'not-allowed' : 'pointer'
               }}
             >
               {isSubmitting ? 'Updating...' : 'Update Content'}
