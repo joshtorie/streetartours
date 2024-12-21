@@ -12,6 +12,7 @@ export function NeighborhoodPage() {
   const [loading, setLoading] = useState(true);
   const [selectedFilter, setSelectedFilter] = useState<TourType | 'ALL'>('ALL');
   const [selectedDuration, setSelectedDuration] = useState<string>('ALL');
+  const [artPieces, setArtPieces] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchNeighborhoodAndTours = async () => {
@@ -38,6 +39,13 @@ export function NeighborhoodPage() {
 
         if (tourError) throw tourError;
         setTours(tourData || []);
+
+        // Fetch art pieces
+        const { data: artPiecesData } = await supabase
+          .from('ArtPieces')
+          .select('*, image, audio_url: art-audio, splat_url: art-splat');
+
+        setArtPieces(artPiecesData);
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
@@ -127,6 +135,19 @@ export function NeighborhoodPage() {
               />
             ))
           )}
+        </div>
+
+        <div className="mt-12">
+          {artPieces.map(piece => (
+            <div key={piece.id}>
+              <img src={piece.image} alt={piece.name} />
+              <audio controls>
+                <source src={piece.audio_url} type="audio/mpeg" />
+                Your browser does not support the audio tag.
+              </audio>
+              <model-viewer src={piece.splat_url} alt={piece.name} auto-rotate camera-controls></model-viewer>
+            </div>
+          ))}
         </div>
       </main>
     </div>

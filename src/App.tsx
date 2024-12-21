@@ -10,6 +10,7 @@ import { ArtLocation } from './types/map';
 import { artLocations } from './data/artLocations';
 import { MapIcon } from 'lucide-react';
 import { AdminPage } from './pages/AdminPage';
+import { InfoPage } from './pages/InfoPage';
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
           }
         />
         <Route path="/admin" element={<AdminPage />} />
+        <Route path="/info" element={<InfoPage />} />
       </Routes>
     </Router>
   );
