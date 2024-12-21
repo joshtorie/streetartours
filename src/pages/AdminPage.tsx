@@ -22,8 +22,8 @@ interface ArtPieceFormData {
   longitude: number;
   splat: File | null;
   audio: File | null;
-  cityId: string;
-  neighborhoodId: string;
+  city: string;
+  neighborhood: string;
 }
 
 interface PageContent {
@@ -136,9 +136,6 @@ const styles = {
 
 export function AdminPage() {
   const [activeTab, setActiveTab] = useState<'art' | 'content' | null>(null);
-  const [cities, setCities] = useState<City[]>([]);
-  const [neighborhoods, setNeighborhoods] = useState<Neighborhood[]>([]);
-  const [filteredNeighborhoods, setFilteredNeighborhoods] = useState<Neighborhood[]>([]);
   const [artFormData, setArtFormData] = useState<ArtPieceFormData>({
     artistName: '',
     artName: '',
@@ -148,8 +145,8 @@ export function AdminPage() {
     longitude: 0,
     splat: null,
     audio: null,
-    cityId: '',
-    neighborhoodId: '',
+    city: '',
+    neighborhood: ''
   });
   const [pageContent, setPageContent] = useState<PageContent>({
     title: '',
@@ -189,54 +186,6 @@ export function AdminPage() {
       fetchPageContent();
     }
   }, [activeTab]);
-
-  useEffect(() => {
-    const fetchCitiesAndNeighborhoods = async () => {
-      try {
-        // Fetch cities
-        const { data: citiesData, error: citiesError } = await supabase
-          .from('Cities')
-          .select('id, name');
-        
-        if (citiesError) {
-          console.error('Error fetching cities:', citiesError);
-          throw citiesError;
-        }
-        console.log('Fetched cities:', citiesData);
-        setCities(citiesData || []);
-
-        // Fetch neighborhoods
-        const { data: neighborhoodsData, error: neighborhoodsError } = await supabase
-          .from('Neighborhoods')
-          .select('id, name, city_id');
-        
-        if (neighborhoodsError) {
-          console.error('Error fetching neighborhoods:', neighborhoodsError);
-          throw neighborhoodsError;
-        }
-        console.log('Fetched neighborhoods:', neighborhoodsData);
-        setNeighborhoods(neighborhoodsData || []);
-      } catch (error) {
-        console.error('Error fetching cities and neighborhoods:', error);
-      }
-    };
-
-    fetchCitiesAndNeighborhoods();
-  }, []);
-
-  useEffect(() => {
-    if (artFormData.cityId) {
-      const filtered = neighborhoods.filter(n => n.city_id === artFormData.cityId);
-      setFilteredNeighborhoods(filtered);
-      // Reset neighborhood selection if it doesn't belong to the selected city
-      if (!filtered.find(n => n.id === artFormData.neighborhoodId)) {
-        setArtFormData(prev => ({ ...prev, neighborhoodId: '' }));
-      }
-    } else {
-      setFilteredNeighborhoods([]);
-      setArtFormData(prev => ({ ...prev, neighborhoodId: '' }));
-    }
-  }, [artFormData.cityId, neighborhoods]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -360,8 +309,8 @@ export function AdminPage() {
           name: artFormData.artName || 'Untitled',
           description: artFormData.description,
           artist_id: artistId,
-          city_id: artFormData.cityId || null,
-          neighborhood_id: artFormData.neighborhoodId || null,
+          city: artFormData.city,
+          neighborhood: artFormData.neighborhood,
           image: imageUrl || null,
           coordinates: artFormData.latitude && artFormData.longitude 
             ? `(${artFormData.longitude},${artFormData.latitude})`
@@ -383,8 +332,8 @@ export function AdminPage() {
         longitude: 0,
         splat: null,
         audio: null,
-        cityId: '',
-        neighborhoodId: '',
+        city: '',
+        neighborhood: ''
       });
     } catch (error) {
       console.error('Error:', error);
@@ -449,56 +398,37 @@ export function AdminPage() {
     }
 
     try {
-      console.log('Validating coordinates:', {
-        latitude: artFormData.latitude,
-        longitude: artFormData.longitude
-      });
+      // Use OpenStreetMap Nominatim API to get location details
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?lat=${artFormData.latitude}&lon=${artFormData.longitude}&format=json&addressdetails=1`,
+        {
+          headers: {
+            'Accept-Language': 'en', // Get results in English
+            'User-Agent': 'StreetArtTours/1.0' // Identify our application
+          }
+        }
+      );
 
-      // First get all cities
-      const { data: cities, error: cityError } = await supabase
-        .from('Cities')
-        .select('id, name');
-
-      if (cityError) {
-        console.error('Error fetching cities:', cityError);
-        setMessage('Error fetching cities');
-        return;
+      if (!response.ok) {
+        throw new Error('Failed to fetch location data');
       }
 
-      // For now, just use Tel Aviv as default
-      const telAviv = cities.find(city => city.name.toLowerCase().includes('tel aviv'));
-      if (!telAviv) {
-        setMessage('Tel Aviv not found in database');
-        return;
-      }
+      const data = await response.json();
+      console.log('Location data:', data);
 
-      // Get neighborhoods for Tel Aviv
-      const { data: neighborhoods, error: neighborhoodError } = await supabase
-        .from('Neighborhoods')
-        .select('id, name')
-        .eq('city_id', telAviv.id);
+      // Extract city and neighborhood from the response
+      const address = data.address;
+      const city = address.city || address.town || address.municipality || 'Tel Aviv';
+      const neighborhood = address.suburb || address.neighbourhood || address.residential || 'Unknown';
 
-      if (neighborhoodError) {
-        console.error('Error fetching neighborhoods:', neighborhoodError);
-        setMessage('Error fetching neighborhoods');
-        return;
-      }
-
-      // For testing, use first neighborhood
-      const firstNeighborhood = neighborhoods[0];
-      if (!firstNeighborhood) {
-        setMessage('No neighborhoods found');
-        return;
-      }
-
-      // Update form data with Tel Aviv and first neighborhood
+      // Update form data with the location information
       setArtFormData(prev => ({
         ...prev,
-        cityId: telAviv.id,
-        neighborhoodId: firstNeighborhood.id
+        city,
+        neighborhood
       }));
 
-      setMessage(`Location set to ${telAviv.name}, ${firstNeighborhood.name}`);
+      setMessage(`Location validated! City: ${city}, Neighborhood: ${neighborhood}`);
     } catch (error) {
       console.error('Error validating coordinates:', error);
       setMessage('Error validating coordinates. Please try again.');
@@ -746,44 +676,24 @@ export function AdminPage() {
                 <div style={{ marginBottom: '15px' }}>
                   <label style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
                     City
-                    <select
-                      value={artFormData.cityId}
-                      onChange={(e) => setArtFormData(prev => ({ ...prev, cityId: e.target.value }))}
-                      style={{ 
-                        padding: '8px', 
-                        border: '1px solid #ccc', 
-                        borderRadius: '4px',
-                        backgroundColor: artFormData.cityId ? '#f0f9ff' : 'white'
-                      }}
-                      disabled
-                    >
-                      <option value="">Select a city</option>
-                      {cities.map(city => (
-                        <option key={city.id} value={city.id}>{city.name}</option>
-                      ))}
-                    </select>
+                    <input
+                      type="text"
+                      value={artFormData.city}
+                      onChange={(e) => setArtFormData(prev => ({ ...prev, city: e.target.value }))}
+                      style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
+                    />
                   </label>
                 </div>
 
                 <div style={{ marginBottom: '15px' }}>
                   <label style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
                     Neighborhood
-                    <select
-                      value={artFormData.neighborhoodId}
-                      onChange={(e) => setArtFormData(prev => ({ ...prev, neighborhoodId: e.target.value }))}
-                      style={{ 
-                        padding: '8px', 
-                        border: '1px solid #ccc', 
-                        borderRadius: '4px',
-                        backgroundColor: artFormData.neighborhoodId ? '#f0f9ff' : 'white'
-                      }}
-                      disabled
-                    >
-                      <option value="">Select a neighborhood</option>
-                      {filteredNeighborhoods.map(neighborhood => (
-                        <option key={neighborhood.id} value={neighborhood.id}>{neighborhood.name}</option>
-                      ))}
-                    </select>
+                    <input
+                      type="text"
+                      value={artFormData.neighborhood}
+                      onChange={(e) => setArtFormData(prev => ({ ...prev, neighborhood: e.target.value }))}
+                      style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
+                    />
                   </label>
                 </div>
 
