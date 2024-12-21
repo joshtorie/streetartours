@@ -281,7 +281,7 @@ export function AdminPage() {
           artist_id: artistId,
           image: imageUrl || null,
           coordinates: artFormData.latitude && artFormData.longitude 
-            ? `POINT(${artFormData.longitude} ${artFormData.latitude})`
+            ? `(${artFormData.longitude},${artFormData.latitude})` 
             : null,
           splat_url: splatUrl || null,
           audio_url: audioUrl || null,
