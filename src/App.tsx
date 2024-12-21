@@ -9,6 +9,7 @@ import { ArtDetails } from './components/art/ArtDetails';
 import { ArtLocation } from './types/map';
 import { artLocations } from './data/artLocations';
 import { MapIcon } from 'lucide-react';
+import { AdminPage } from './pages/AdminPage';
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
             />
           }
         />
+        <Route path="/admin" element={<AdminPage />} />
       </Routes>
     </Router>
   );
