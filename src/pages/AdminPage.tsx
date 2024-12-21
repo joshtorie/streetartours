@@ -136,6 +136,10 @@ export function AdminPage() {
   const [message, setMessage] = useState('');
 
   useEffect(() => {
+    // Allow direct access without authentication checks
+  }, []);
+
+  useEffect(() => {
     // Fetch existing info page content
     const fetchContent = async () => {
       const { data, error } = await supabase
