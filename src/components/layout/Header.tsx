@@ -24,7 +24,7 @@ export function Header() {
             >
               <ShoppingBag className="w-6 h-6" />
             </a>
-            <Link to="/login" className="text-gray-600 hover:text-blue-600">
+            <Link to="/admin" className="text-gray-600 hover:text-blue-600">
               <User className="w-6 h-6" />
             </Link>
           </div>
