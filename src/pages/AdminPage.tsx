@@ -454,46 +454,55 @@ export function AdminPage() {
         longitude: artFormData.longitude
       });
 
-      const { data, error } = await supabase
-        .from('Cities')
-        .select(`
-          id,
-          name,
-          Neighborhoods!inner (
-            id,
-            name
-          )
-        `)
-        .filter('st_contains(geometry, st_setsrid(st_point($1, $2), 4326))', {
-          vars: [artFormData.longitude, artFormData.latitude],
-        })
-        .single();
+      // First find the city
+      const { data: cityData, error: cityError } = await supabase
+        .rpc('find_city_by_point', {
+          lat: artFormData.latitude,
+          long: artFormData.longitude
+        });
 
-      if (error) {
-        console.error('Location validation error:', error);
-        setMessage('Error validating coordinates: ' + error.message);
+      if (cityError) {
+        console.error('City lookup error:', cityError);
+        setMessage('Error looking up city: ' + cityError.message);
         return;
       }
 
-      if (!data) {
+      if (!cityData || cityData.length === 0) {
         setMessage('No city found at these coordinates');
         return;
       }
 
-      const neighborhood = data.Neighborhoods[0];
-      if (!neighborhood) {
+      const cityId = cityData[0].id;
+
+      // Then find the neighborhood within that city
+      const { data: neighborhoodData, error: neighborhoodError } = await supabase
+        .rpc('find_neighborhood_by_point', {
+          lat: artFormData.latitude,
+          long: artFormData.longitude,
+          city_id: cityId
+        });
+
+      if (neighborhoodError) {
+        console.error('Neighborhood lookup error:', neighborhoodError);
+        setMessage('Error looking up neighborhood: ' + neighborhoodError.message);
+        return;
+      }
+
+      if (!neighborhoodData || neighborhoodData.length === 0) {
         setMessage('No neighborhood found at these coordinates');
         return;
       }
 
+      const neighborhoodId = neighborhoodData[0].id;
+
       // Update form data with found city and neighborhood
       setArtFormData(prev => ({
         ...prev,
-        cityId: data.id,
-        neighborhoodId: neighborhood.id
+        cityId,
+        neighborhoodId
       }));
 
-      setMessage(`Location validated successfully! City: ${data.name}, Neighborhood: ${neighborhood.name}`);
+      setMessage(`Location validated successfully! City: ${cityData[0].name}, Neighborhood: ${neighborhoodData[0].name}`);
     } catch (error) {
       console.error('Error validating coordinates:', error);
       setMessage('Error validating coordinates. Please try again.');
