@@ -2,14 +2,28 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { Header } from '../components/layout/Header';
 
+interface City {
+  id: string;
+  name: string;
+}
+
+interface Neighborhood {
+  id: string;
+  name: string;
+  city_id: string;
+}
+
 interface ArtPieceFormData {
   artistName: string;
   artName: string;
+  description: string;
   image: File | null;
   latitude: number;
   longitude: number;
   splat: File | null;
   audio: File | null;
+  cityId: string;
+  neighborhoodId: string;
 }
 
 interface PageContent {
@@ -19,23 +33,13 @@ interface PageContent {
 
 const styles = {
   container: {
-    minHeight: '100vh',
     padding: '20px',
-    backgroundColor: '#f9fafb',
-  },
-  section: {
     maxWidth: '800px',
-    margin: '20px auto',
-    padding: '20px',
-    backgroundColor: 'white',
-    borderRadius: '8px',
-    boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+    margin: '0 auto',
   },
-  title: {
+  heading: {
     fontSize: '24px',
-    fontWeight: 'bold',
     marginBottom: '20px',
-    color: '#111827',
   },
   form: {
     display: 'flex',
@@ -46,87 +50,103 @@ const styles = {
     marginBottom: '15px',
   },
   label: {
-    display: 'block',
-    marginBottom: '5px',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '5px',
     fontSize: '14px',
-    fontWeight: '500',
-    color: '#374151',
+    color: '#666',
   },
   input: {
-    width: '100%',
     padding: '8px 12px',
-    borderRadius: '6px',
-    border: '1px solid #d1d5db',
+    border: '1px solid #ddd',
+    borderRadius: '4px',
+    fontSize: '14px',
+    width: '100%',
+  },
+  select: {
+    padding: '8px 12px',
+    border: '1px solid #ddd',
+    borderRadius: '4px',
+    fontSize: '14px',
+    width: '100%',
+    backgroundColor: 'white',
+    cursor: 'pointer',
   },
   textarea: {
-    width: '100%',
     padding: '8px 12px',
-    borderRadius: '6px',
-    border: '1px solid #d1d5db',
-    minHeight: '200px',
-    fontFamily: 'inherit',
+    border: '1px solid #ddd',
+    borderRadius: '4px',
+    fontSize: '14px',
+    width: '100%',
+    minHeight: '100px',
+    resize: 'vertical' as const,
   },
   button: {
-    padding: '10px',
-    backgroundColor: '#2563eb',
+    padding: '10px 20px',
+    backgroundColor: '#007bff',
     color: 'white',
     border: 'none',
-    borderRadius: '6px',
+    borderRadius: '4px',
     cursor: 'pointer',
-    fontSize: '14px',
-    fontWeight: '500',
-  },
-  buttonDisabled: {
-    backgroundColor: '#93c5fd',
-    cursor: 'not-allowed',
+    fontSize: '16px',
+    ':hover': {
+      backgroundColor: '#0056b3',
+    },
+    ':disabled': {
+      backgroundColor: '#ccc',
+      cursor: 'not-allowed',
+    },
   },
   message: {
+    marginTop: '10px',
     padding: '10px',
-    marginBottom: '15px',
-    borderRadius: '6px',
+    borderRadius: '4px',
+    backgroundColor: '#d4edda',
+    color: '#155724',
+    border: '1px solid #c3e6cb',
   },
-  successMessage: {
-    backgroundColor: '#dcfce7',
-    color: '#166534',
+  error: {
+    backgroundColor: '#f8d7da',
+    color: '#721c24',
+    border: '1px solid #f5c6cb',
   },
-  errorMessage: {
-    backgroundColor: '#fee2e2',
-    color: '#991b1b',
-  },
-  tabs: {
+  coordinatesContainer: {
     display: 'flex',
-    gap: '10px',
+    gap: '15px',
+  },
+  tabContainer: {
     marginBottom: '20px',
   },
   tab: {
     padding: '10px 20px',
     border: 'none',
-    borderRadius: '6px',
+    backgroundColor: '#f8f9fa',
     cursor: 'pointer',
-    backgroundColor: '#e5e7eb',
-    color: '#374151',
+    marginRight: '10px',
+    borderRadius: '4px',
   },
   activeTab: {
-    backgroundColor: '#2563eb',
+    backgroundColor: '#007bff',
     color: 'white',
-  },
-  coordinatesContainer: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: '10px',
   },
 };
 
 export function AdminPage() {
+  const [cities, setCities] = useState<City[]>([]);
+  const [neighborhoods, setNeighborhoods] = useState<Neighborhood[]>([]);
+  const [filteredNeighborhoods, setFilteredNeighborhoods] = useState<Neighborhood[]>([]);
   const [activeTab, setActiveTab] = useState<'art' | 'content'>('art');
   const [artFormData, setArtFormData] = useState<ArtPieceFormData>({
     artistName: '',
     artName: '',
+    description: '',
     image: null,
     latitude: 0,
     longitude: 0,
     splat: null,
     audio: null,
+    cityId: '',
+    neighborhoodId: '',
   });
   const [contentFormData, setContentFormData] = useState<PageContent>({
     title: '',
@@ -157,6 +177,46 @@ export function AdminPage() {
       fetchContent();
     }
   }, [activeTab]);
+
+  useEffect(() => {
+    const fetchCitiesAndNeighborhoods = async () => {
+      try {
+        // Fetch cities
+        const { data: citiesData, error: citiesError } = await supabase
+          .from('Cities')
+          .select('id, name');
+        
+        if (citiesError) throw citiesError;
+        setCities(citiesData || []);
+
+        // Fetch neighborhoods
+        const { data: neighborhoodsData, error: neighborhoodsError } = await supabase
+          .from('Neighborhoods')
+          .select('id, name, city_id');
+        
+        if (neighborhoodsError) throw neighborhoodsError;
+        setNeighborhoods(neighborhoodsData || []);
+      } catch (error) {
+        console.error('Error fetching cities and neighborhoods:', error);
+      }
+    };
+
+    fetchCitiesAndNeighborhoods();
+  }, []);
+
+  useEffect(() => {
+    if (artFormData.cityId) {
+      const filtered = neighborhoods.filter(n => n.city_id === artFormData.cityId);
+      setFilteredNeighborhoods(filtered);
+      // Reset neighborhood selection if it doesn't belong to the selected city
+      if (!filtered.find(n => n.id === artFormData.neighborhoodId)) {
+        setArtFormData(prev => ({ ...prev, neighborhoodId: '' }));
+      }
+    } else {
+      setFilteredNeighborhoods([]);
+      setArtFormData(prev => ({ ...prev, neighborhoodId: '' }));
+    }
+  }, [artFormData.cityId, neighborhoods]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -278,10 +338,13 @@ export function AdminPage() {
         .from('ArtPieces')
         .insert([{
           name: artFormData.artName || 'Untitled',
+          description: artFormData.description,
           artist_id: artistId,
+          city_id: artFormData.cityId || null,
+          neighborhood_id: artFormData.neighborhoodId || null,
           image: imageUrl || null,
           coordinates: artFormData.latitude && artFormData.longitude 
-            ? `(${artFormData.longitude},${artFormData.latitude})` 
+            ? `(${artFormData.longitude},${artFormData.latitude})`
             : null,
           splat_url: splatUrl || null,
           audio_url: audioUrl || null,
@@ -294,11 +357,14 @@ export function AdminPage() {
       setArtFormData({
         artistName: '',
         artName: '',
+        description: '',
         image: null,
         latitude: 0,
         longitude: 0,
         splat: null,
         audio: null,
+        cityId: '',
+        neighborhoodId: '',
       });
     } catch (error) {
       console.error('Error:', error);
@@ -337,7 +403,7 @@ export function AdminPage() {
     <div style={styles.container}>
       <Header />
       
-      <div style={styles.tabs}>
+      <div style={styles.tabContainer}>
         <button
           style={{
             ...styles.tab,
@@ -361,15 +427,15 @@ export function AdminPage() {
       {message && (
         <div style={{
           ...styles.message,
-          ...(message.includes('Error') ? styles.errorMessage : styles.successMessage),
+          ...(message.includes('Error') ? styles.error : {}),
         }}>
           {message}
         </div>
       )}
 
       {activeTab === 'art' ? (
-        <div style={styles.section}>
-          <h2 style={styles.title}>Add New Art Piece</h2>
+        <div style={styles.form}>
+          <h2 style={styles.heading}>Add New Art Piece</h2>
           <form style={styles.form} onSubmit={handleSubmit}>
             <div style={styles.field}>
               <label style={styles.label}>
@@ -391,6 +457,17 @@ export function AdminPage() {
                   value={artFormData.artName}
                   onChange={(e) => setArtFormData(prev => ({ ...prev, artName: e.target.value }))}
                   style={styles.input}
+                />
+              </label>
+            </div>
+
+            <div style={styles.field}>
+              <label style={styles.label}>
+                Description
+                <textarea
+                  value={artFormData.description}
+                  onChange={(e) => setArtFormData(prev => ({ ...prev, description: e.target.value }))}
+                  style={styles.textarea}
                 />
               </label>
             </div>
@@ -431,6 +508,38 @@ export function AdminPage() {
               </label>
             </div>
 
+            <div style={styles.field}>
+              <label style={styles.label}>
+                City
+                <select
+                  value={artFormData.cityId}
+                  onChange={(e) => setArtFormData(prev => ({ ...prev, cityId: e.target.value }))}
+                  style={styles.select}
+                >
+                  <option value="">Select a city</option>
+                  {cities.map(city => (
+                    <option key={city.id} value={city.id}>{city.name}</option>
+                  ))}
+                </select>
+              </label>
+            </div>
+
+            <div style={styles.field}>
+              <label style={styles.label}>
+                Neighborhood
+                <select
+                  value={artFormData.neighborhoodId}
+                  onChange={(e) => setArtFormData(prev => ({ ...prev, neighborhoodId: e.target.value }))}
+                  style={styles.select}
+                >
+                  <option value="">Select a neighborhood</option>
+                  {filteredNeighborhoods.map(neighborhood => (
+                    <option key={neighborhood.id} value={neighborhood.id}>{neighborhood.name}</option>
+                  ))}
+                </select>
+              </label>
+            </div>
+
             <div style={styles.coordinatesContainer}>
               <div style={styles.field}>
                 <label style={styles.label}>
@@ -464,7 +573,7 @@ export function AdminPage() {
               disabled={isSubmitting}
               style={{
                 ...styles.button,
-                ...(isSubmitting ? styles.buttonDisabled : {}),
+                ...(isSubmitting ? styles.button[':disabled'] : {}),
               }}
             >
               {isSubmitting ? 'Adding...' : 'Add Art Piece'}
@@ -472,8 +581,8 @@ export function AdminPage() {
           </form>
         </div>
       ) : (
-        <div style={styles.section}>
-          <h2 style={styles.title}>Edit Info Page</h2>
+        <div style={styles.form}>
+          <h2 style={styles.heading}>Edit Info Page</h2>
           <form style={styles.form} onSubmit={handleContentSubmit}>
             <div style={styles.field}>
               <label style={styles.label}>
@@ -503,7 +612,7 @@ export function AdminPage() {
               disabled={isSubmitting}
               style={{
                 ...styles.button,
-                ...(isSubmitting ? styles.buttonDisabled : {}),
+                ...(isSubmitting ? styles.button[':disabled'] : {}),
               }}
             >
               {isSubmitting ? 'Updating...' : 'Update Content'}
