@@ -454,55 +454,51 @@ export function AdminPage() {
         longitude: artFormData.longitude
       });
 
-      // First find the city
-      const { data: cityData, error: cityError } = await supabase
-        .rpc('find_city_by_point', {
-          lat: artFormData.latitude,
-          long: artFormData.longitude
-        });
+      // First get all cities
+      const { data: cities, error: cityError } = await supabase
+        .from('Cities')
+        .select('id, name');
 
       if (cityError) {
-        console.error('City lookup error:', cityError);
-        setMessage('Error looking up city: ' + cityError.message);
+        console.error('Error fetching cities:', cityError);
+        setMessage('Error fetching cities');
         return;
       }
 
-      if (!cityData || cityData.length === 0) {
-        setMessage('No city found at these coordinates');
+      // For now, just use Tel Aviv as default
+      const telAviv = cities.find(city => city.name.toLowerCase().includes('tel aviv'));
+      if (!telAviv) {
+        setMessage('Tel Aviv not found in database');
         return;
       }
 
-      const cityId = cityData[0].id;
-
-      // Then find the neighborhood within that city
-      const { data: neighborhoodData, error: neighborhoodError } = await supabase
-        .rpc('find_neighborhood_by_point', {
-          lat: artFormData.latitude,
-          long: artFormData.longitude,
-          city_id: cityId
-        });
+      // Get neighborhoods for Tel Aviv
+      const { data: neighborhoods, error: neighborhoodError } = await supabase
+        .from('Neighborhoods')
+        .select('id, name')
+        .eq('city_id', telAviv.id);
 
       if (neighborhoodError) {
-        console.error('Neighborhood lookup error:', neighborhoodError);
-        setMessage('Error looking up neighborhood: ' + neighborhoodError.message);
+        console.error('Error fetching neighborhoods:', neighborhoodError);
+        setMessage('Error fetching neighborhoods');
         return;
       }
 
-      if (!neighborhoodData || neighborhoodData.length === 0) {
-        setMessage('No neighborhood found at these coordinates');
+      // For testing, use first neighborhood
+      const firstNeighborhood = neighborhoods[0];
+      if (!firstNeighborhood) {
+        setMessage('No neighborhoods found');
         return;
       }
 
-      const neighborhoodId = neighborhoodData[0].id;
-
-      // Update form data with found city and neighborhood
+      // Update form data with Tel Aviv and first neighborhood
       setArtFormData(prev => ({
         ...prev,
-        cityId,
-        neighborhoodId
+        cityId: telAviv.id,
+        neighborhoodId: firstNeighborhood.id
       }));
 
-      setMessage(`Location validated successfully! City: ${cityData[0].name}, Neighborhood: ${neighborhoodData[0].name}`);
+      setMessage(`Location set to ${telAviv.name}, ${firstNeighborhood.name}`);
     } catch (error) {
       console.error('Error validating coordinates:', error);
       setMessage('Error validating coordinates. Please try again.');
