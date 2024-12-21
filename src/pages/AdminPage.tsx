@@ -148,10 +148,11 @@ export function AdminPage() {
     cityId: '',
     neighborhoodId: '',
   });
-  const [contentFormData, setContentFormData] = useState<PageContent>({
+  const [pageContent, setPageContent] = useState<PageContent>({
     title: '',
-    content: '',
+    content: ''
   });
+  const [contentMessage, setContentMessage] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState('');
 
@@ -160,21 +161,29 @@ export function AdminPage() {
   }, []);
 
   useEffect(() => {
-    // Fetch existing info page content
-    const fetchContent = async () => {
-      const { data, error } = await supabase
-        .from('PageContent')
-        .select('title, content')
-        .eq('page_name', 'info')
-        .single();
+    const fetchPageContent = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('PageContent')
+          .select('title, content')
+          .eq('title', 'About')
+          .single();
 
-      if (!error && data) {
-        setContentFormData(data);
+        if (error) {
+          console.error('Error fetching page content:', error);
+          return;
+        }
+
+        if (data) {
+          setPageContent(data);
+        }
+      } catch (error) {
+        console.error('Error in fetchPageContent:', error);
       }
     };
 
     if (activeTab === 'content') {
-      fetchContent();
+      fetchPageContent();
     }
   }, [activeTab]);
 
@@ -385,23 +394,46 @@ export function AdminPage() {
   const handleContentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setMessage('');
+    setContentMessage('');
 
     try {
-      const { error } = await supabase
+      // Check if content exists
+      const { data: existingContent } = await supabase
         .from('PageContent')
-        .update({
-          title: contentFormData.title,
-          content: contentFormData.content,
-          last_updated: new Date().toISOString(),
-        })
-        .eq('page_name', 'info');
+        .select('id')
+        .eq('title', pageContent.title)
+        .single();
 
-      if (error) throw error;
-      setMessage('Content updated successfully!');
+      let error;
+      if (existingContent) {
+        // Update existing content
+        const { error: updateError } = await supabase
+          .from('PageContent')
+          .update({
+            content: pageContent.content,
+            updated_at: new Date().toISOString()
+          })
+          .eq('title', pageContent.title);
+        error = updateError;
+      } else {
+        // Insert new content
+        const { error: insertError } = await supabase
+          .from('PageContent')
+          .insert([{
+            title: pageContent.title,
+            content: pageContent.content
+          }]);
+        error = insertError;
+      }
+
+      if (error) {
+        setContentMessage('Error updating content: ' + error.message);
+      } else {
+        setContentMessage('Content updated successfully!');
+      }
     } catch (error) {
-      console.error('Error:', error);
-      setMessage('Error updating content. Please try again.');
+      console.error('Error updating content:', error);
+      setContentMessage('Error updating content. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -501,6 +533,14 @@ export function AdminPage() {
           ...(message.includes('Error') ? styles.error : {}),
         }}>
           {message}
+        </div>
+      )}
+      {contentMessage && (
+        <div style={{
+          ...styles.message,
+          ...(contentMessage.includes('Error') ? styles.error : {}),
+        }}>
+          {contentMessage}
         </div>
       )}
 
@@ -660,8 +700,8 @@ export function AdminPage() {
                 Page Title
                 <input
                   type="text"
-                  value={contentFormData.title}
-                  onChange={(e) => setContentFormData(prev => ({ ...prev, title: e.target.value }))}
+                  value={pageContent.title}
+                  onChange={(e) => setPageContent(prev => ({ ...prev, title: e.target.value }))}
                   style={styles.input}
                 />
               </label>
@@ -671,8 +711,8 @@ export function AdminPage() {
               <label style={styles.label}>
                 Content
                 <textarea
-                  value={contentFormData.content}
-                  onChange={(e) => setContentFormData(prev => ({ ...prev, content: e.target.value }))}
+                  value={pageContent.content}
+                  onChange={(e) => setPageContent(prev => ({ ...prev, content: e.target.value }))}
                   style={styles.textarea}
                 />
               </label>
