@@ -37,9 +37,41 @@ const styles = {
     maxWidth: '800px',
     margin: '0 auto',
   },
+  tabContainer: {
+    display: 'flex',
+    gap: '10px',
+    marginBottom: '30px',
+    borderBottom: '1px solid #e5e7eb',
+    padding: '0 10px',
+  },
+  tab: {
+    padding: '12px 24px',
+    border: 'none',
+    backgroundColor: 'transparent',
+    cursor: 'pointer',
+    fontSize: '16px',
+    fontWeight: '500',
+    color: '#6b7280',
+    borderBottom: '2px solid transparent',
+    marginBottom: '-1px',
+    transition: 'all 0.2s ease',
+    ':hover': {
+      color: '#4b5563',
+      borderBottom: '2px solid #e5e7eb',
+    },
+  },
+  activeTab: {
+    color: '#3b82f6',
+    borderBottom: '2px solid #3b82f6',
+    ':hover': {
+      borderBottom: '2px solid #3b82f6',
+    },
+  },
   heading: {
     fontSize: '24px',
     marginBottom: '20px',
+    color: '#111827',
+    fontWeight: '600',
   },
   form: {
     display: 'flex',
@@ -54,80 +86,73 @@ const styles = {
     flexDirection: 'column' as const,
     gap: '5px',
     fontSize: '14px',
-    color: '#666',
+    color: '#374151',
+    fontWeight: '500',
   },
   input: {
     padding: '8px 12px',
-    border: '1px solid #ddd',
-    borderRadius: '4px',
+    border: '1px solid #d1d5db',
+    borderRadius: '6px',
     fontSize: '14px',
     width: '100%',
-  },
-  select: {
-    padding: '8px 12px',
-    border: '1px solid #ddd',
-    borderRadius: '4px',
-    fontSize: '14px',
-    width: '100%',
-    backgroundColor: 'white',
-    cursor: 'pointer',
+    transition: 'border-color 0.2s ease',
+    ':focus': {
+      outline: 'none',
+      borderColor: '#3b82f6',
+      boxShadow: '0 0 0 2px rgba(59, 130, 246, 0.1)',
+    },
   },
   textarea: {
     padding: '8px 12px',
-    border: '1px solid #ddd',
-    borderRadius: '4px',
+    border: '1px solid #d1d5db',
+    borderRadius: '6px',
     fontSize: '14px',
     width: '100%',
-    minHeight: '100px',
+    minHeight: '200px',
     resize: 'vertical' as const,
+    transition: 'border-color 0.2s ease',
+    ':focus': {
+      outline: 'none',
+      borderColor: '#3b82f6',
+      boxShadow: '0 0 0 2px rgba(59, 130, 246, 0.1)',
+    },
   },
   button: {
     padding: '10px 20px',
-    backgroundColor: '#007bff',
+    backgroundColor: '#3b82f6',
     color: 'white',
     border: 'none',
-    borderRadius: '4px',
+    borderRadius: '6px',
     cursor: 'pointer',
     fontSize: '16px',
+    fontWeight: '500',
+    transition: 'background-color 0.2s ease',
     ':hover': {
-      backgroundColor: '#0056b3',
+      backgroundColor: '#2563eb',
     },
     ':disabled': {
-      backgroundColor: '#ccc',
+      backgroundColor: '#93c5fd',
       cursor: 'not-allowed',
     },
   },
   message: {
     marginTop: '10px',
-    padding: '10px',
-    borderRadius: '4px',
-    backgroundColor: '#d4edda',
-    color: '#155724',
-    border: '1px solid #c3e6cb',
+    marginBottom: '20px',
+    padding: '12px 16px',
+    borderRadius: '6px',
+    backgroundColor: '#d1fae5',
+    color: '#065f46',
+    fontSize: '14px',
+    fontWeight: '500',
   },
   error: {
-    backgroundColor: '#f8d7da',
-    color: '#721c24',
-    border: '1px solid #f5c6cb',
+    backgroundColor: '#fee2e2',
+    color: '#991b1b',
   },
   coordinatesContainer: {
-    display: 'flex',
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
     gap: '15px',
-  },
-  tabContainer: {
-    marginBottom: '20px',
-  },
-  tab: {
-    padding: '10px 20px',
-    border: 'none',
-    backgroundColor: '#f8f9fa',
-    cursor: 'pointer',
-    marginRight: '10px',
-    borderRadius: '4px',
-  },
-  activeTab: {
-    backgroundColor: '#007bff',
-    color: 'white',
   },
 };
 
@@ -510,7 +535,7 @@ export function AdminPage() {
         <button
           style={{
             ...styles.tab,
-            ...(activeTab === 'art' ? styles.activeTab : {}),
+            ...(activeTab === 'art' ? styles.activeTab : {})
           }}
           onClick={() => setActiveTab('art')}
         >
@@ -519,11 +544,11 @@ export function AdminPage() {
         <button
           style={{
             ...styles.tab,
-            ...(activeTab === 'content' ? styles.activeTab : {}),
+            ...(activeTab === 'content' ? styles.activeTab : {})
           }}
           onClick={() => setActiveTab('content')}
         >
-          Edit Info Page
+          Edit Content
         </button>
       </div>
 
@@ -535,6 +560,7 @@ export function AdminPage() {
           {message}
         </div>
       )}
+      
       {contentMessage && (
         <div style={{
           ...styles.message,
@@ -625,7 +651,7 @@ export function AdminPage() {
                 <select
                   value={artFormData.cityId}
                   onChange={(e) => setArtFormData(prev => ({ ...prev, cityId: e.target.value }))}
-                  style={styles.select}
+                  style={styles.input}
                 >
                   <option value="">Select a city</option>
                   {cities.map(city => (
@@ -641,7 +667,7 @@ export function AdminPage() {
                 <select
                   value={artFormData.neighborhoodId}
                   onChange={(e) => setArtFormData(prev => ({ ...prev, neighborhoodId: e.target.value }))}
-                  style={styles.select}
+                  style={styles.input}
                 >
                   <option value="">Select a neighborhood</option>
                   {filteredNeighborhoods.map(neighborhood => (
@@ -684,7 +710,7 @@ export function AdminPage() {
               disabled={isSubmitting}
               style={{
                 ...styles.button,
-                ...(isSubmitting ? styles.button[':disabled'] : {}),
+                ...(isSubmitting ? styles.button[':disabled'] : {})
               }}
             >
               {isSubmitting ? 'Adding...' : 'Add Art Piece'}
@@ -723,7 +749,7 @@ export function AdminPage() {
               disabled={isSubmitting}
               style={{
                 ...styles.button,
-                ...(isSubmitting ? styles.button[':disabled'] : {}),
+                ...(isSubmitting ? styles.button[':disabled'] : {})
               }}
             >
               {isSubmitting ? 'Updating...' : 'Update Content'}
