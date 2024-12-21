@@ -186,7 +186,11 @@ export function AdminPage() {
           .from('Cities')
           .select('id, name');
         
-        if (citiesError) throw citiesError;
+        if (citiesError) {
+          console.error('Error fetching cities:', citiesError);
+          throw citiesError;
+        }
+        console.log('Fetched cities:', citiesData);
         setCities(citiesData || []);
 
         // Fetch neighborhoods
@@ -194,7 +198,11 @@ export function AdminPage() {
           .from('Neighborhoods')
           .select('id, name, city_id');
         
-        if (neighborhoodsError) throw neighborhoodsError;
+        if (neighborhoodsError) {
+          console.error('Error fetching neighborhoods:', neighborhoodsError);
+          throw neighborhoodsError;
+        }
+        console.log('Fetched neighborhoods:', neighborhoodsData);
         setNeighborhoods(neighborhoodsData || []);
       } catch (error) {
         console.error('Error fetching cities and neighborhoods:', error);
@@ -399,6 +407,62 @@ export function AdminPage() {
     }
   };
 
+  // Function to find city and neighborhood based on coordinates
+  const findLocationByCoordinates = async (latitude: number, longitude: number) => {
+    if (!latitude || !longitude) return;
+
+    try {
+      // Find the nearest city within 5km
+      const { data: nearestCity, error: cityError } = await supabase
+        .rpc('find_nearest_city', {
+          lat: latitude,
+          lng: longitude,
+          distance_meters: 5000 // 5km radius
+        });
+
+      if (cityError) {
+        console.error('Error finding nearest city:', cityError);
+        return;
+      }
+
+      if (nearestCity && nearestCity.length > 0) {
+        const cityId = nearestCity[0].id;
+        setArtFormData(prev => ({ ...prev, cityId }));
+
+        // Find the neighborhood that contains this point
+        const { data: containingNeighborhood, error: neighborhoodError } = await supabase
+          .rpc('find_containing_neighborhood', {
+            lat: latitude,
+            lng: longitude
+          });
+
+        if (neighborhoodError) {
+          console.error('Error finding neighborhood:', neighborhoodError);
+          return;
+        }
+
+        if (containingNeighborhood && containingNeighborhood.length > 0) {
+          setArtFormData(prev => ({ ...prev, neighborhoodId: containingNeighborhood[0].id }));
+        }
+      }
+    } catch (error) {
+      console.error('Error in findLocationByCoordinates:', error);
+    }
+  };
+
+  // Update coordinates handler to include location finding
+  const handleCoordinatesChange = (e: React.ChangeEvent<HTMLInputElement>, field: 'latitude' | 'longitude') => {
+    const value = parseFloat(e.target.value);
+    setArtFormData(prev => ({ ...prev, [field]: value }));
+
+    // If both coordinates are set, try to find the location
+    if (field === 'latitude' && !isNaN(value) && !isNaN(artFormData.longitude)) {
+      findLocationByCoordinates(value, artFormData.longitude);
+    } else if (field === 'longitude' && !isNaN(value) && !isNaN(artFormData.latitude)) {
+      findLocationByCoordinates(artFormData.latitude, value);
+    }
+  };
+
   return (
     <div style={styles.container}>
       <Header />
@@ -548,7 +612,7 @@ export function AdminPage() {
                     type="number"
                     step="any"
                     value={artFormData.latitude}
-                    onChange={(e) => setArtFormData(prev => ({ ...prev, latitude: parseFloat(e.target.value) }))}
+                    onChange={(e) => handleCoordinatesChange(e, 'latitude')}
                     style={styles.input}
                   />
                 </label>
@@ -561,7 +625,7 @@ export function AdminPage() {
                     type="number"
                     step="any"
                     value={artFormData.longitude}
-                    onChange={(e) => setArtFormData(prev => ({ ...prev, longitude: parseFloat(e.target.value) }))}
+                    onChange={(e) => handleCoordinatesChange(e, 'longitude')}
                     style={styles.input}
                   />
                 </label>
