@@ -182,7 +182,7 @@ export function AdminPage() {
     setMessage('');
 
     try {
-      // 1. Upload image to Supabase Storage
+      // 1. Upload image to Supabase Storage if provided
       let imageUrl = '';
       if (artFormData.image) {
         const fileExt = artFormData.image.name.split('.').pop();
@@ -195,43 +195,71 @@ export function AdminPage() {
         imageUrl = `${supabase.storage.from('art-images').getPublicUrl(fileName).data.publicUrl}`;
       }
 
-      // 2. Check if artist exists, if not create new artist
-      const { data: existingArtists, error: artistError } = await supabase
-        .from('Artists')
-        .select('id')
-        .eq('name', artFormData.artistName)
-        .limit(1);
-
-      if (artistError) throw artistError;
-
-      let artistId;
-      if (existingArtists && existingArtists.length > 0) {
-        artistId = existingArtists[0].id;
-      } else {
-        const { data: newArtist, error: newArtistError } = await supabase
+      // 2. Check if artist exists or create new one
+      let artistId = null;
+      if (artFormData.artistName) {
+        const { data: existingArtists, error: artistError } = await supabase
           .from('Artists')
-          .insert([{ name: artFormData.artistName }])
           .select('id')
-          .single();
+          .eq('name', artFormData.artistName)
+          .limit(1);
 
-        if (newArtistError) throw newArtistError;
-        artistId = newArtist.id;
+        if (artistError) throw artistError;
+
+        if (existingArtists && existingArtists.length > 0) {
+          artistId = existingArtists[0].id;
+        } else {
+          const { data: newArtist, error: newArtistError } = await supabase
+            .from('Artists')
+            .insert([{ name: artFormData.artistName }])
+            .select('id')
+            .single();
+
+          if (newArtistError) throw newArtistError;
+          artistId = newArtist.id;
+        }
       }
 
-      // 3. Create art piece
+      // 3. Upload splat file if provided
+      let splatUrl = '';
+      if (artFormData.splat) {
+        const fileExt = artFormData.splat.name.split('.').pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        const { error: splatError } = await supabase.storage
+          .from('art-splat')
+          .upload(fileName, artFormData.splat);
+        if (splatError) throw splatError;
+        splatUrl = `${supabase.storage.from('art-splat').getPublicUrl(fileName).data.publicUrl}`;
+      }
+
+      // 4. Upload audio file if provided
+      let audioUrl = '';
+      if (artFormData.audio) {
+        const fileExt = artFormData.audio.name.split('.').pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        const { error: audioError } = await supabase.storage
+          .from('art-audio')
+          .upload(fileName, artFormData.audio);
+        if (audioError) throw audioError;
+        audioUrl = `${supabase.storage.from('art-audio').getPublicUrl(fileName).data.publicUrl}`;
+      }
+
+      // 5. Create art piece
       const { error: artError } = await supabase
         .from('ArtPieces')
         .insert([{
-          name: artFormData.artName,
+          name: artFormData.artName || 'Untitled',
           artist_id: artistId,
-          image: imageUrl,
-          coordinates: `POINT(${artFormData.longitude} ${artFormData.latitude})`,
-          splat: artFormData.splat,
-          audio: artFormData.audio,
+          image: imageUrl || null,
+          coordinates: artFormData.latitude && artFormData.longitude 
+            ? `POINT(${artFormData.longitude} ${artFormData.latitude})`
+            : null,
+          splat_url: splatUrl || null,
+          audio_url: audioUrl || null,
         }]);
 
       if (artError) throw artError;
-
+      
       setMessage('Art piece added successfully!');
       // Reset form
       setArtFormData({
@@ -322,7 +350,6 @@ export function AdminPage() {
                   value={artFormData.artistName}
                   onChange={(e) => setArtFormData(prev => ({ ...prev, artistName: e.target.value }))}
                   style={styles.input}
-                  required
                 />
               </label>
             </div>
@@ -335,7 +362,6 @@ export function AdminPage() {
                   value={artFormData.artName}
                   onChange={(e) => setArtFormData(prev => ({ ...prev, artName: e.target.value }))}
                   style={styles.input}
-                  required
                 />
               </label>
             </div>
@@ -348,7 +374,6 @@ export function AdminPage() {
                   accept="image/*"
                   onChange={handleImageChange}
                   style={styles.input}
-                  required
                 />
               </label>
             </div>
@@ -361,7 +386,6 @@ export function AdminPage() {
                   accept=".glb,.gltf"
                   onChange={handleSplatChange}
                   style={styles.input}
-                  required
                 />
               </label>
             </div>
@@ -374,7 +398,6 @@ export function AdminPage() {
                   accept="audio/*"
                   onChange={handleAudioChange}
                   style={styles.input}
-                  required
                 />
               </label>
             </div>
@@ -389,7 +412,6 @@ export function AdminPage() {
                     value={artFormData.latitude}
                     onChange={(e) => setArtFormData(prev => ({ ...prev, latitude: parseFloat(e.target.value) }))}
                     style={styles.input}
-                    required
                   />
                 </label>
               </div>
@@ -403,7 +425,6 @@ export function AdminPage() {
                     value={artFormData.longitude}
                     onChange={(e) => setArtFormData(prev => ({ ...prev, longitude: parseFloat(e.target.value) }))}
                     style={styles.input}
-                    required
                   />
                 </label>
               </div>
@@ -433,7 +454,6 @@ export function AdminPage() {
                   value={contentFormData.title}
                   onChange={(e) => setContentFormData(prev => ({ ...prev, title: e.target.value }))}
                   style={styles.input}
-                  required
                 />
               </label>
             </div>
@@ -445,7 +465,6 @@ export function AdminPage() {
                   value={contentFormData.content}
                   onChange={(e) => setContentFormData(prev => ({ ...prev, content: e.target.value }))}
                   style={styles.textarea}
-                  required
                 />
               </label>
             </div>
